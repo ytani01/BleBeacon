@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
+#
+# (c) 2020 Yoichi Tanibayashi
+#
+"""
+"""
+__author__ = 'Yoichi Tanibayashi'
+__date__   = '2020'
 
-'''
-from bluepy.btle import Peripheral, DefaultDelegate, Scanner, BTLEException, UUID
-'''
 from bluepy.btle import DefaultDelegate, Scanner, BTLEException
 import bluepy.btle
 import time
-# import sys
 
 from MyLogger import get_logger
+
 
 class ScanDelegate(DefaultDelegate):
     ADDR_HDR = 'ac:23:3f:'
@@ -22,22 +26,17 @@ class ScanDelegate(DefaultDelegate):
         super().__init__()
 
     def handleDiscovery(self, scanEntry, isNewDev, isNewData):
-        '''
-        self._logger.debug('scanEntry=%s', scanEntry)
-        self._logger.debug('isNewDev=%s, isNewData=%s',
-                           isNewDev, isNewData)
-        print(time.strftime("%Y-%m-%d %H:%M:%s", time.gmtime()),
-              scanEntry.addr, scanEntry.getScanData())
-        sys.stdout.flush()
-        '''
         addr = scanEntry.addr
-        # self._logger.debug('addr=%s', addr)
 
         if not addr.startswith(self.ADDR_HDR):
             return
 
+        self._logger.debug('addr=%s', addr)
+        self._logger.debug('scanEntry=%s, isNewDev=%s, isNewData=%s',
+                           scanEntry, isNewDev, isNewData)
+
         scan_data = scanEntry.getScanData()
-        # self._logger.debug('scan_data=%s', scan_data)
+        self._logger.debug('scan_data=%s', scan_data)
 
         for a in scan_data:
             if a[1] == self.DATA_KEYWORD:
@@ -54,9 +53,10 @@ class ScanDelegate(DefaultDelegate):
                 self._logger.debug('batt_val=%s', batt_val)
 
                 temp_val = self.hexstr2float(temp_str)
-                humidity_val = self.hexstr2float(humidity_str)
+                self._logger.debug('temp_val=%.1f C', temp_val)
 
-                self._logger.info('%.1f C, %.1f %%', temp_val, humidity_val)
+                humidity_val = self.hexstr2float(humidity_str)
+                self._logger.debug('humidity_val=%.1f %%', humidity_val)
 
     def hexstr2float(self, val_str):
         self._logger.debug('val_str=%s', val_str)
