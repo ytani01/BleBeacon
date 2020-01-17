@@ -9,7 +9,7 @@ $ . ./env-ble/bin/activate
 (env-ble)$ ./env-ble/lib/python3.7/site-packages/bluepy/bluepy-helper 0
 # ...
 le on
-rsp=$mgmtcode=$success
+rsp=$mgmt code=$success
 quit
 (env-ble)$
 ```
