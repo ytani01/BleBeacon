@@ -23,22 +23,45 @@ class ScanDelegate(DefaultDelegate):
         self._logger = get_logger(__class__.__name__, self._debug)
         self._logger.debug('')
 
+        self._addr = {}
+
         super().__init__()
 
     def handleDiscovery(self, scanEntry, isNewDev, isNewData):
-        addr = scanEntry.addr
-
-        if not addr.startswith(self.ADDR_HDR):
-            return
-
-        self._logger.debug('addr=%s', addr)
+        """
         self._logger.debug('scanEntry=%s, isNewDev=%s, isNewData=%s',
                            scanEntry, isNewDev, isNewData)
+        """
+        if not isNewDev:
+            return
+
+        addr = scanEntry.addr
+
+        if addr in self._addr.keys():
+            return
+        self._addr[addr] = True
+        print(addr)
+        return
+
+        """
+        if not addr.startswith(self.ADDR_HDR):
+            return
+        """
+
+        self._logger.debug('========================================')
+        self._logger.debug('addr=%s', addr)
 
         scan_data = scanEntry.getScanData()
-        self._logger.debug('scan_data=%s', scan_data)
+        self._logger.debug('scan_data=[')
 
-        for a in scan_data:
+        for (ad_type, ad_desc, ad_value) in scan_data:
+            self._logger.debug('%3s,%s,%s', ad_type, ad_desc, ad_value)
+
+            if ad_desc == 'Manufacturer':
+                co_id = ad_value[0:4]
+                self._logger.debug('  co_id=%s', co_id)
+                
+            """
             if a[1] == self.DATA_KEYWORD:
                 data_str = a[2]
                 self._logger.debug('data_str=%s', data_str)
@@ -57,6 +80,8 @@ class ScanDelegate(DefaultDelegate):
 
                 humidity_val = self.hexstr2float(humidity_str)
                 self._logger.debug('humidity_val=%.1f %%', humidity_val)
+            """
+        self._logger.debug(']')
 
     def hexstr2float(self, val_str):
         self._logger.debug('val_str=%s', val_str)
