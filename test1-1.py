@@ -32,14 +32,21 @@ class ScanDelegate(DefaultDelegate):
         scan_data = scanEntry.getScanData()
 
         for (ad_type, ad_desc, ad_value) in scan_data:
-            self._logger.debug('%3s,%s,%s', ad_type, ad_desc, ad_value)
-
-            if 'ESP' in ad_value:
-                print('%s: %s.' % (ad_desc, ad_value))
+            #self._logger.debug('%3s,%s,%s', ad_type, ad_desc, ad_value)
+            if 'MyESP' in ad_value:
+                print('%s %s: %s.' % (addr, ad_desc, ad_value))
 
                 peri = bluepy.btle.Peripheral()
-                peri.connect(addr, bluepy.btle.ADDR_TYPE_RANDOM)
-                peri.disconnect()
+                try:
+                    ret = peri.connect(addr)
+                    # peri.connect(addr, bluepy.btle.ADDR_TYPE_RANDOM)
+                    print('connect:ret=', ret)
+                    time.sleep(5)
+                    ret = peri.disconnect()
+                    print('disconnect:ret=', ret)
+                except Exception as e:
+                    print('%s:%s.' % (type(e), e))
+                    return
 
     def hexstr2float(self, val_str):
         self._logger.debug('val_str=%s', val_str)
