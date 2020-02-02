@@ -98,6 +98,7 @@ class App:
                     except Exception as e:
                         self._logger.error('%s:%s.', type(e), e)
                         self._logger.info('retry!')
+                    finally:
                         time.sleep(1)
 
                 try:
@@ -117,7 +118,9 @@ class App:
                                                          self.cmd.encode(
                                                              'utf-8'),
                                                          False)
-                                time.sleep(1)
+                                time.sleep(1.5)
+                                
+                            time.sleep(.5)
 
                 except Exception as e:
                     msg = '%s:%s.' % (type(e), e)
