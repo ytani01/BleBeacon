@@ -7,46 +7,44 @@
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'
 
-from bluepy.btle import DefaultDelegate, Scanner, BTLEException
+from bluepy.btle import DefaultDelegate, Scanner
 import bluepy.btle
+import queue
 import time
 import click
 from MyLogger import get_logger
 
 
 class ScanDelegate(DefaultDelegate):
-    def __init__(self, debug=False):
+    def __init__(self, addrq, debug=False):
         self._debug = debug
         self._logger = get_logger(__class__.__name__, self._debug)
         self._logger.debug('')
 
-        self._addr = {}
+        self.addrq = addrq
+
+        self.p_addr = ''
+        self.p_addr_type = ''
 
         super().__init__()
 
     def handleDiscovery(self, scanEntry, isNewDev, isNewData):
-        #self._logger.debug('scanEntry=%s, isNewDev=%s, isNewData=%s',
+        # self._logger.debug('scanEntry=%s, isNewDev=%s, isNewData=%s',
         #                   scanEntry, isNewDev, isNewData)
 
         addr = scanEntry.addr
+        addr_type = scanEntry.addrType
+
         scan_data = scanEntry.getScanData()
-
         for (ad_type, ad_desc, ad_value) in scan_data:
-            #self._logger.debug('%3s,%s,%s', ad_type, ad_desc, ad_value)
             if 'MyESP' in ad_value:
-                print('%s %s: %s.' % (addr, ad_desc, ad_value))
+                self._logger.debug('%s(%s)', addr, addr_type)
+                self._logger.debug('%3s,%s,%s',
+                                   ad_type, ad_desc, ad_value)
 
-                peri = bluepy.btle.Peripheral()
-                try:
-                    ret = peri.connect(addr)
-                    # peri.connect(addr, bluepy.btle.ADDR_TYPE_RANDOM)
-                    print('connect:ret=', ret)
-                    time.sleep(5)
-                    ret = peri.disconnect()
-                    print('disconnect:ret=', ret)
-                except Exception as e:
-                    print('%s:%s.' % (type(e), e))
-                    return
+                self.addrq.put((addr, addr_type))
+
+                return
 
     def hexstr2float(self, val_str):
         self._logger.debug('val_str=%s', val_str)
@@ -59,31 +57,81 @@ class ScanDelegate(DefaultDelegate):
         return val
 
 
-class App(DefaultDelegate):
-    def __init__(self, debug=False):
+class App:
+    DST_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8'
+
+    def __init__(self, cmd, debug=False):
         self._debug = debug
         self._logger = get_logger(__class__.__name__, self._debug)
-        self._logger.debug('')
+        self._logger.debug('cmd=%s', cmd)
 
-        delegate = ScanDelegate(debug=debug)
-        self._scanner = Scanner().withDelegate(delegate)
+        self.cmd = cmd
+
+        self.addrq = queue.Queue()
+        self._delegate = ScanDelegate(self.addrq, debug=self._debug)
+        self._scanner = Scanner().withDelegate(self._delegate)
 
     def main(self):
         self._logger.debug('')
+
         while True:
-            self.scan(5.0)
+            try:
+                self._logger.info('scanning..')
+                self._scanner.scan(1, passive=False)
+            except Exception as e:
+                msg = '%s:%s' % (type(e), e)
+                self._logger.error(msg)
+                return
+
+            if not self.addrq.empty():
+                (addr, addr_type) = self.addrq.get()
+                self._logger.info('addr=%s(%s)', addr, addr_type)
+                time.sleep(1)
+                
+                while True:
+                    try:
+                        self._logger.info('connecting..')
+                        peri = bluepy.btle.Peripheral(addr, addr_type)
+                        self._logger.info('connected')
+                        break
+
+                    except Exception as e:
+                        self._logger.error('%s:%s.', type(e), e)
+                        self._logger.info('retry!')
+                        time.sleep(1)
+
+                try:
+                    for svc in peri.getServices():
+                        self._logger.debug('Svc UUID=%s', svc.uuid)
+                        for chara in svc.getCharacteristics():
+                            self._logger.debug('  Chara UUID=%s', chara.uuid)
+                            handle = chara.getHandle()
+                            self._logger.debug('    Handle=%s', handle)
+                            props = chara.propertiesToString()
+                            self._logger.debug('    Props =%s', props)
+
+                            if chara.uuid == self.DST_UUID:
+                                self._logger.info('CharaUUID=%s',
+                                                  self.DST_UUID)
+                                peri.writeCharacteristic(handle,
+                                                         self.cmd.encode(
+                                                             'utf-8'),
+                                                         False)
+                                time.sleep(1)
+
+                except Exception as e:
+                    msg = '%s:%s.' % (type(e), e)
+                    peri.disconnect()
+                else:
+                    peri.disconnect()
+                    self._logger.info('disconnected')
+                    return
+
+            self._delegate.p_addr = ''
             time.sleep(0.1)
 
     def end(self):
         self._logger.debug('')
-
-    def scan(self, sec):
-        self._logger.debug('sec=%s', sec)
-        try:
-            self._scanner.scan(sec, passive=False)
-        except Exception as e:
-            msg = '%s:%s' % (type(e), e)
-            self._logger.warning(msg)
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -92,14 +140,15 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.command(context_settings=CONTEXT_SETTINGS, help='''
 BLE Beacon Scanner
 ''')
+@click.argument('cmd')
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def main(debug):
+def main(cmd, debug):
     logger = get_logger(__name__, debug)
-    logger.debug('')
+    logger.debug('cmd=%s', cmd)
 
     logger.info('start')
-    app = App(debug=debug)
+    app = App(cmd, debug=debug)
     try:
         app.main()
     finally:

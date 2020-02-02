@@ -36,11 +36,12 @@ class ScanDelegate(DefaultDelegate):
             return
 
         addr = scanEntry.addr
+        addr_type = scanEntry.addrType
 
         if addr in self._addr.keys():
             return
         self._addr[addr] = True
-        print(addr)
+        print(addr, addr_type)
         return
 
         """
@@ -115,7 +116,8 @@ class App(DefaultDelegate):
     def scan(self, sec):
         self._logger.debug('sec=%s', sec)
         try:
-            self._scanner.scan(sec, passive=True)
+            # self._scanner.scan(sec, passive=True)
+            self._scanner.scan(sec)
         except Exception as e:
             msg = '%s:%s' % (type(e), e)
             self._logger.warning(msg)
