@@ -19,13 +19,23 @@
 #define LED_ON	HIGH
 #define LED_OFF	LOW
 
+#define MODE_OFF 0
+#define MODE_ON  1
+#define MODE_BLINK 2
+
+int led_mode = MODE_OFF;
+
 class MyCallbacks: public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic *pCharacteristic) {
     std::string value = pCharacteristic->getValue();
     
     if (value == "on") {
+      led_mode = MODE_ON;
       digitalWrite(LED_PIN, LED_ON);
+    } else if (value == "blink") {
+      led_mode = MODE_BLINK;
     } else {
+      led_mode = MODE_OFF;
       digitalWrite(LED_PIN, LED_OFF);
     }
       
@@ -50,6 +60,7 @@ void setup() {
   Serial.println("4- Go to CUSTOM CHARACTERISTIC in CUSTOM SERVICE and write something");
   Serial.println("5- See the magic =)");
 
+  led_mode = MODE_OFF;
   pinMode(LED_PIN, OUTPUT);
 
   BLEDevice::init("MyESP32");
@@ -74,6 +85,16 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  delay(2000);
+  if (led_mode == MODE_ON) {
+    digitalWrite(LED_PIN, LED_ON);
+    delay(1000);
+  } else if (led_mode == MODE_BLINK) {
+    digitalWrite(LED_PIN, LED_ON);
+    delay(300);
+    digitalWrite(LED_PIN, LED_OFF);
+    delay(300);
+  } else {
+    digitalWrite(LED_PIN, LED_OFF);
+    delay(1000);
+  }
 }
