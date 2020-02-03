@@ -32,6 +32,9 @@ class ScanDelegate(DefaultDelegate):
         # self._logger.debug('scanEntry=%s, isNewDev=%s, isNewData=%s',
         #                   scanEntry, isNewDev, isNewData)
 
+        if not self.addrq.empty():
+            return
+
         addr = scanEntry.addr
         addr_type = scanEntry.addrType
 
@@ -75,19 +78,22 @@ class App:
         self._logger.debug('')
 
         while True:
-            try:
-                self._logger.info('scanning..')
-                self._scanner.scan(1, passive=False)
-            except Exception as e:
-                msg = '%s:%s' % (type(e), e)
-                self._logger.error(msg)
-                return
+            if self.addrq.empty():
+                try:
+                    self._logger.info('scanning..')
+                    self._scanner.scan(1, passive=False)
+                except Exception as e:
+                    msg = '%s:%s' % (type(e), e)
+                    self._logger.error(msg)
+                    return
+
+            time.sleep(.5)
 
             if not self.addrq.empty():
                 (addr, addr_type) = self.addrq.get()
+                self.addrq.put((addr, addr_type))
                 self._logger.info('addr=%s(%s)', addr, addr_type)
-                time.sleep(1)
-                
+
                 while True:
                     try:
                         self._logger.info('connecting..')
@@ -99,7 +105,7 @@ class App:
                         self._logger.error('%s:%s.', type(e), e)
                         self._logger.info('retry!')
                     finally:
-                        time.sleep(1)
+                        time.sleep(.1)
 
                 try:
                     for svc in peri.getServices():
@@ -119,8 +125,8 @@ class App:
                                                              'utf-8'),
                                                          False)
                                 time.sleep(1.5)
-                                
-                            time.sleep(.5)
+
+                            time.sleep(.1)
 
                 except Exception as e:
                     msg = '%s:%s.' % (type(e), e)
