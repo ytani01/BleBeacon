@@ -72,17 +72,21 @@ class ScanDelegate(DefaultDelegate):
                         self._lg.debug('  Chara UUID=%s', chara.uuid)
                         handle = chara.getHandle()
                         self._lg.debug('    Handle=%s', handle)
+
                         props = chara.propertiesToString()
                         self._lg.debug('    Props =%s', props)
 
                         if chara.uuid == self.DST_UUID:
                             self._lg.info('CharaUUID=%s', self.DST_UUID)
-                            peri.writeCharacteristic(handle,
-                                                     self._cmd.encode(
-                                                         'utf-8'),
-                                                     False)
-                            self._lg.debug('write: done')
-                            self._app._stat = 'done'
+                            try:
+                                peri.writeCharacteristic(handle,
+                                                         self._cmd.encode(
+                                                             'utf-8'),
+                                                         False)
+                                self._lg.debug('write: done')
+                                self._app._stat = 'done'
+                            except Exception as e:
+                                self._lg.error('%s:%s.', type(e), e)
 
                             peri.disconnect()
                             return
