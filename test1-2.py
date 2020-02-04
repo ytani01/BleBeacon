@@ -10,6 +10,7 @@ __date__   = '2020'
 from bluepy.btle import DefaultDelegate, Scanner
 import bluepy.btle
 import queue
+import sys
 import time
 import click
 from MyLogger import get_logger
@@ -35,13 +36,22 @@ class ScanDelegate(DefaultDelegate):
         self._lg.debug('handle=%s, data=%s', handle, data)
 
     def handleDiscovery(self, scanEntry, isNewDev, isNewData):
-        self._lg.debug('')
-
         addr = scanEntry.addr
         addr_type = scanEntry.addrType
 
         scan_data = scanEntry.getScanData()
         for (ad_type, ad_desc, ad_value) in scan_data:
+            if ad_desc == 'Manufacturer':
+                continue
+            if ad_desc == 'Flags':
+                continue
+            if 'Service' in ad_desc:
+                continue
+            
+            #self._lg.debug('\n  %s: %s.', ad_desc, ad_value)
+            print(' %s: %s.' % (ad_desc, ad_value))
+            sys.stdout.flush()
+            
             if 'MyESP' not in ad_value:
                 continue
 
@@ -119,7 +129,7 @@ class App:
         while True:
             try:
                 self._lg.info('scanning..')
-                self._scanner.scan(.5, passive=False)
+                self._scanner.scan(2, passive=False)
                 self._lg.info('scan: done')
             except bluepy.btle.BTLEDisconnectError as e:
                 msg = '%s:%s' % (type(e), e)
