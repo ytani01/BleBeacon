@@ -26,6 +26,14 @@
 int led_mode = MODE_OFF;
 
 class MyCallbacks: public BLECharacteristicCallbacks {
+  void onConnect(BLEClient *pClient) {
+    Serial.println('> onConnect');
+  }
+
+  void OnDisconnect(BLEClient *pClient) {
+    Serial.println('> onDisconnect');
+  }
+
   void onWrite(BLECharacteristic *pCharacteristic) {
     std::string value = pCharacteristic->getValue();
     
