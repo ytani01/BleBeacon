@@ -61,7 +61,7 @@ class BleBeacon:
 
 
 class MMBLEBC2:
-    ADDR_HDR = 'ac:23:3f:'
+    ADDR_HDR = 'ac:23:3f:a0'
     DATA_KEYWORD = '16b Service Data'
 
     def __init__(self, scanner=None, debug=False):
@@ -85,9 +85,9 @@ class MMBLEBC2:
                 continue
             """
 
-            self._lg.debug('addr=%s', dev.addr)
             if not dev.addr.startswith(self.ADDR_HDR):
                 continue
+            self._lg.info('addr = %s', dev.addr)
 
             for (adtype, desc, val) in dev.getScanData():
                 self._lg.debug('%s: %s.', desc, val)
@@ -100,19 +100,25 @@ class MMBLEBC2:
                     self._lg.debug('batt_str=%s, temp_str=%s, humidity_str=%s',
                                    batt_str, temp_str, humidity_str)
 
-                    batt_val = int(batt_str, 16) / int('64', 16)
+                    batt_val = round(int(batt_str, 16) / int('64', 16)) * 100
                     temp_val = self.hexstr2float(temp_str)
                     humidity_val = self.hexstr2float(humidity_str)
-                    self._lg.info('batt=%d %%(0x%s), temp=%.1f C(0x%s), humidity=%d %%(0x%s)',
-                                  round(batt_val*100), batt_str,
-                                  temp_val, temp_str,
-                                  int(humidity_val), humidity_str)
+                    self._lg.info('  batt     =%d %% (0x%s)',
+                                  batt_val, batt_str)
+                    self._lg.info('  temp     = %.1f C (0x%s)',
+                                  temp_val, temp_str)
+                    self._lg.info('  humidity = %d %% (0x%s)',
+                                  humidity_val, humidity_str)
 
     def hexstr2float(self, val_str):
+        '''
+        lettle endian
+        '''
         self._lg.debug('val_str=%s', val_str)
 
         val = int(val_str[0:2], 16)
         val += int(val_str[2:4], 16) / 256.0
+
         self._lg.debug('val=%f', val)
 
         return val

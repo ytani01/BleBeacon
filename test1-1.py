@@ -87,7 +87,7 @@ class App:
                     self._logger.error(msg)
                     return
 
-            time.sleep(.5)
+            # time.sleep(.5)
 
             if not self.addrq.empty():
                 (addr, addr_type) = self.addrq.get()
