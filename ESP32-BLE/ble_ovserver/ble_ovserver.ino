@@ -64,10 +64,17 @@ void loop() {
         BLEAdvertisedDevice dev = foundDevices.getDevice(i);
 	std::string device_addr = dev.getAddress().toString();
         std::string device_name = dev.getName();
+	std::string device_svcdata = dev.getServiceData();
 
 	Serial.print(device_addr.c_str());
 	Serial.print(" ");
-  	Serial.println(device_name.c_str());
+  	Serial.print(device_name.c_str());
+	Serial.print(" ");
+
+	String s = device_svcdata.c_str();
+	for (int j = 0; j < device_svcdata.size(); j++) {
+	  Serial.print(sprintf("%02X ", (const char)s[j]));
+	}
 	Serial.println();
 	continue;
 	
@@ -95,7 +102,9 @@ void loop() {
                 }
             }
         }
-    }
+    } // for
+    Serial.println();
+
     // プッシュボタン押下でLEDを消灯してディスプレイ表示を消去する
     int buttonState = digitalRead(buttonPin);
     if (buttonState == HIGH) {
