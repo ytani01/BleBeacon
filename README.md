@@ -17,9 +17,8 @@ quit
 
 # Reference
 
-* [ ] bluepy
+* bluepy
 * [ESP32による近距離無線通信の実験(2) BLE通]
   http://marchan.e5.valueserver.jp/cabin/comp/jbox/arc212/index212.html
-* [ ]
-  https://ambidata.io/samples/temphumid/ble_gw/
+* https://ambidata.io/samples/temphumid/ble_gw/
 
