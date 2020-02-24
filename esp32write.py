@@ -16,11 +16,12 @@ from MyLogger import get_logger
 
 
 class ScanDelegate(DefaultDelegate):
-    def __init__(self, addrq, debug=False):
+    def __init__(self, dev_name, addrq, debug=False):
         self._debug = debug
         self._logger = get_logger(__class__.__name__, self._debug)
-        self._logger.debug('')
+        self._logger.debug('dev_name=%s', dev_name)
 
+        self.dev_name = dev_name
         self.addrq = addrq
 
         self.p_addr = ''
@@ -40,7 +41,7 @@ class ScanDelegate(DefaultDelegate):
         addr_type = scanEntry.addrType
         scan_data = scanEntry.getScanData()
         for (ad_type, ad_desc, ad_value) in scan_data:
-            if 'MyESP' in ad_value:
+            if self.dev_name in ad_value:
                 self._logger.debug('%s(%s)', addr, addr_type)
                 self._logger.debug('%3s,%s,%s', ad_type, ad_desc, ad_value)
 
@@ -62,15 +63,17 @@ class ScanDelegate(DefaultDelegate):
 class App:
     DST_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8'
 
-    def __init__(self, cmd, debug=False):
+    def __init__(self, dev_name, cmd, debug=False):
         self._debug = debug
         self._logger = get_logger(__class__.__name__, self._debug)
-        self._logger.debug('cmd=%s', cmd)
+        self._logger.debug('dev_name=%s, cmd=%s', dev_name, cmd)
 
+        self.dev_name = dev_name
         self.cmd = cmd
 
         self.addrq = queue.Queue()
-        self._delegate = ScanDelegate(self.addrq, debug=self._debug)
+        self._delegate = ScanDelegate(self.dev_name, self.addrq,
+                                      debug=self._debug)
         self._scanner = Scanner().withDelegate(self._delegate)
 
     def main(self):
@@ -148,15 +151,16 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.command(context_settings=CONTEXT_SETTINGS, help='''
 BLE Beacon Scanner
 ''')
+@click.argument('dev_name')
 @click.argument('cmd')
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def main(cmd, debug):
+def main(dev_name, cmd, debug):
     logger = get_logger(__name__, debug)
-    logger.debug('cmd=%s', cmd)
+    logger.debug('dev_name=%s, cmd=%s', dev_name, cmd)
 
     logger.info('start')
-    app = App(cmd, debug=debug)
+    app = App(dev_name, cmd, debug=debug)
     try:
         app.main()
     finally:
