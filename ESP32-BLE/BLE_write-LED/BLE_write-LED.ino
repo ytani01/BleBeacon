@@ -19,28 +19,27 @@
 #define LED_ON	HIGH
 #define LED_OFF	LOW
 
-#define MODE_OFF   0
-#define MODE_ON    1
+#define MODE_OFF 0
+#define MODE_ON  1
 #define MODE_BLINK 2
 
 int led_mode = MODE_OFF;
 
-bool dev_connected = false;
-
 class MyCallbacks: public BLECharacteristicCallbacks {
-  void onConnect(BLEServer *pServer) {
-    dev_connected = true;
-    Serial.println("* connected");
+  void onConnect(BLEClient *pClient) {
+    Serial.println('> onConnect');
   }
-  
-  void onDisconnect(BLEServer *pServer) {
-    dev_connected = false;
-    Serial.println("* disconnected");
+
+  void OnDisconnect(BLEClient *pClient) {
+    Serial.println('> onDisconnect');
   }
-  
+
   void onWrite(BLECharacteristic *pCharacteristic) {
+    Serial.println('> onWrite');
     std::string value = pCharacteristic->getValue();
     
+    digitalWrite(LED_PIN, LED_OFF);
+
     if (value == "on") {
       led_mode = MODE_ON;
       digitalWrite(LED_PIN, LED_ON);
@@ -74,6 +73,7 @@ void setup() {
 
   led_mode = MODE_OFF;
   pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LED_ON);
 
   BLEDevice::init("MyESP32");
   BLEServer *pServer = BLEDevice::createServer();
@@ -81,9 +81,12 @@ void setup() {
   BLEService *pService = pServer->createService(SERVICE_UUID);
 
   BLECharacteristic *pCharacteristic
-    = pService->createCharacteristic(CHARACTERISTIC_UUID,
+    = pService->createCharacteristic(
+				     CHARACTERISTIC_UUID,
 				     BLECharacteristic::PROPERTY_READ |
-				     BLECharacteristic::PROPERTY_WRITE );
+				     BLECharacteristic::PROPERTY_WRITE
+				     );
+
 
   pCharacteristic->setCallbacks(new MyCallbacks());
 
@@ -108,3 +111,4 @@ void loop() {
     delay(1000);
   }
 }
+>>>>>>> 1cd203eafc1a6fc7f70e4fea81c3a712b56fc50e
