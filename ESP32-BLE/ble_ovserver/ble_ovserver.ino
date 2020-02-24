@@ -25,7 +25,10 @@
 #define ManufacturerId 0xffff       // 既定のManufacturer ID
 const int scanning_time = 3;        // スキャン時間（秒）
 BLEScan* pBLEScan;                  // Scanオブジェクトへのポインター
-int prev_seq[MAX_DEVICES] = { -1, -1, -1, -1, -1, -1, -1, -1 };
+int prev_seq[MAX_DEVICES] = {
+  -1, -1, -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1, -1
+};
 
 /* 受信データ構造体 */
 struct tmpData {
@@ -70,11 +73,13 @@ void loop() {
 	Serial.print(" ");
   	Serial.print(device_name.c_str());
 	Serial.print(" ");
-
 	String s = device_svcdata.c_str();
+        Serial.print(s);
+        /*
 	for (int j = 0; j < device_svcdata.size(); j++) {
 	  Serial.print(sprintf("%02X ", (const char)s[j]));
 	}
+        */
 	Serial.println();
 	continue;
 	
