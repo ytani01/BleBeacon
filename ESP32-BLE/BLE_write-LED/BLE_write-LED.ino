@@ -37,6 +37,8 @@ class MyCallbacks: public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic *pCharacteristic) {
     std::string value = pCharacteristic->getValue();
     
+    digitalWrite(LED_PIN, LED_OFF);
+
     if (value == "on") {
       led_mode = MODE_ON;
       digitalWrite(LED_PIN, LED_ON);
@@ -70,6 +72,7 @@ void setup() {
 
   led_mode = MODE_OFF;
   pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LED_ON);
 
   BLEDevice::init("MyESP32");
   BLEServer *pServer = BLEDevice::createServer();
@@ -82,6 +85,7 @@ void setup() {
 				     BLECharacteristic::PROPERTY_READ |
 				     BLECharacteristic::PROPERTY_WRITE
 				     );
+
 
   pCharacteristic->setCallbacks(new MyCallbacks());
 
