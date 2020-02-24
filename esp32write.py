@@ -30,20 +30,19 @@ class ScanDelegate(DefaultDelegate):
 
     def handleDiscovery(self, scanEntry, isNewDev, isNewData):
         # self._logger.debug('scanEntry=%s, isNewDev=%s, isNewData=%s',
-        #                   scanEntry, isNewDev, isNewData)
-
+        #                    scanEntry, isNewDev, isNewData)
+        #self._logger.debug('ScanData=%s', scanEntry.getScanData())
+        
         if not self.addrq.empty():
             return
 
         addr = scanEntry.addr
         addr_type = scanEntry.addrType
-
         scan_data = scanEntry.getScanData()
         for (ad_type, ad_desc, ad_value) in scan_data:
             if 'MyESP' in ad_value:
                 self._logger.debug('%s(%s)', addr, addr_type)
-                self._logger.debug('%3s,%s,%s',
-                                   ad_type, ad_desc, ad_value)
+                self._logger.debug('%3s,%s,%s', ad_type, ad_desc, ad_value)
 
                 self.addrq.put((addr, addr_type))
 
