@@ -19,13 +19,25 @@
 #define LED_ON	HIGH
 #define LED_OFF	LOW
 
-#define MODE_OFF 0
-#define MODE_ON  1
+#define MODE_OFF   0
+#define MODE_ON    1
 #define MODE_BLINK 2
 
 int led_mode = MODE_OFF;
 
+bool dev_connected = false;
+
 class MyCallbacks: public BLECharacteristicCallbacks {
+  void onConnect(BLEServer *pServer) {
+    dev_connected = true;
+    Serial.println("* connected");
+  }
+  
+  void onDisconnect(BLEServer *pServer) {
+    dev_connected = false;
+    Serial.println("* disconnected");
+  }
+  
   void onWrite(BLECharacteristic *pCharacteristic) {
     std::string value = pCharacteristic->getValue();
     
@@ -69,11 +81,9 @@ void setup() {
   BLEService *pService = pServer->createService(SERVICE_UUID);
 
   BLECharacteristic *pCharacteristic
-    = pService->createCharacteristic(
-				     CHARACTERISTIC_UUID,
+    = pService->createCharacteristic(CHARACTERISTIC_UUID,
 				     BLECharacteristic::PROPERTY_READ |
-				     BLECharacteristic::PROPERTY_WRITE
-				     );
+				     BLECharacteristic::PROPERTY_WRITE );
 
   pCharacteristic->setCallbacks(new MyCallbacks());
 
