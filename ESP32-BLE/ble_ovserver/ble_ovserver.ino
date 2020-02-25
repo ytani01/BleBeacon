@@ -4,14 +4,12 @@
 #include <BLEDevice.h>
 #include <Wire.h>                   // I2C interface
 
-/* 基本属性定義  */
 #define SERIAL_SPEED   115200          // SERIAL通信速度
 
-/* スキャン制御用 */
 #define DEV_NAME "ESP32"         // 対象デバイス名
 #define MAX_DEVICES  32              // 最大デバイス数
 #define ManufacturerId 0xffff       // 既定のManufacturer ID
-const int scanning_time = 5;        // スキャン時間（秒）
+const int scanning_time = 3;        // スキャン時間（秒）
 BLEScan* pBLEScan;                  // Scanオブジェクトへのポインター
 int prev_seq[MAX_DEVICES] = {
   -1, -1, -1, -1, -1, -1, -1, -1,
