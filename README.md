@@ -17,7 +17,7 @@ quit
 
 # Reference
 
-* bluepy
-* [ESP32による近距離無線通信の実験（2） BLE通](http://marchan.e5.valueserver.jp/cabin/comp/jbox/arc212/index212.html)
+* [Arduino core for the ESP32](https://github.com/espressif/arduino-esp32)
+* [ESP32による近距離無線通信の実験（2） BLE通信](http://marchan.e5.valueserver.jp/cabin/comp/jbox/arc212/index212.html)
 * [BLE環境センサー・ゲートウェイ(Raspberry Pi編)](https://ambidata.io/samples/temphumid/ble_gw/)
 

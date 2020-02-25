@@ -89,6 +89,9 @@ void setup() {
 
   // init server, service, characteristic, and start service
   BLEServer *pServer = BLEDevice::createServer();
+
+  /*
+  // init service
   BLEService *pService = pServer->createService(SERVICE_UUID);
   BLECharacteristic *pCharacteristic
     = pService->createCharacteristic(
@@ -99,8 +102,14 @@ void setup() {
   pCharacteristic->setCallbacks(new MyCallbacks());
   pCharacteristic->setValue(my_addr.toString().c_str());
   pService->start();
+  */
+
   // start advertising
   BLEAdvertising *pAdvertising = pServer->getAdvertising();
+  BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
+  oAdvertisementData.setName(MY_NAME);
+  oAdvertisementData.setFlags(0x06);
+  pAdvertising->setAdvertisementData(oAdvertisementData);
   pAdvertising->start();
 
   delay(1000);
