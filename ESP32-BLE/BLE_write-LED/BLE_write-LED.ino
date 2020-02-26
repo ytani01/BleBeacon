@@ -75,7 +75,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
 void setup() {
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
-  led_mode = MODE_OFF;
+  led_mode = MODE_BLINK;
 
   Serial.print("Start:");
   Serial.println(MY_NAME);
@@ -109,6 +109,8 @@ void setup() {
   BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
   oAdvertisementData.setName(MY_NAME);
   oAdvertisementData.setFlags(0x06);
+  oAdvertisementData.setManufacturerData("abc");
+
   pAdvertising->setAdvertisementData(oAdvertisementData);
   pAdvertising->start();
 
@@ -116,7 +118,21 @@ void setup() {
   digitalWrite(LED_PIN, LED_OFF);
 }
 
+char buf[256];
+int idx = 0;
+
 void loop() {
+  while (Serial.available() > 0) {
+    buf[idx] = Serial.read();
+    Serial.println(String(buf[idx]));
+    idx++;
+  }
+  if (buf[idx - 1] == 13) {
+    buf[idx] ==  0;
+    Serial.println(String(buf));
+    idx = 0;
+  }
+
   if (led_mode == MODE_ON) {
     digitalWrite(LED_PIN, LED_ON);
     delay(1000);
