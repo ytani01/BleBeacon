@@ -34,12 +34,14 @@ class BleDev:
 
         devs = self._scanner.scan(sec)
 
+        dev_count = 0;
         for dev in devs:
             if self._addr_hdr is not None:
                 if not dev.addr.startswith(self._addr_hdr):
                     continue
 
-            print('%s' % (dev.addr))
+            dev_count += 1
+            print('(%02d)%s' % (dev_count, dev.addr))
 
             for (adtype, desc, val) in dev.getScanData():
                 if self._data_keyword is not None:
@@ -48,7 +50,7 @@ class BleDev:
 
                 print('    %02X:%s: %s' % (adtype, desc, val))
 
-            print('')
+        print('')
 
 
 class App:
