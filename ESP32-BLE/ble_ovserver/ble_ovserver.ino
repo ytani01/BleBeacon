@@ -50,7 +50,7 @@ void loop() {
     BLEScanResults foundDevices = pBLEScan->start(scanning_time);
     int count = foundDevices.getCount();
 
-    for (int i = 0; i < count; i++) {     // 受信したアドバタイズデータを調べて
+    for (int i = 0; i < count; i++) {
         BLEAdvertisedDevice dev = foundDevices.getDevice(i);
 	std::string dev_addr = dev.getAddress().toString();
         std::string dev_name = dev.getName();
@@ -73,33 +73,19 @@ void loop() {
 	  Serial.print(sprintf("%02X ", (const char)s[j]));
 	}
         */
-	Serial.println();
-	continue;
 	
-        if (dev_name == DEV_NAME 
-                && dev.haveManufacturerData()) {   // デバイス名が一致しManufacturer dataがあって
+        if (dev_name == DEV_NAME && dev.haveManufacturerData()) {
             std::string data = dev.getManufacturerData();
-            int manu_code = data[1] << 8 | data[0];
-            int dev_number = data[2];
-            int seq_number = data[4];
+            Serial.print(" / data=");
 
-            // デバイス識別番号が有効かつシーケンス番号が更新されていたら
-            if (dev_number >= 1 && dev_number <= MAX_DEVICES
-                      && seq_number != prev_seq[dev_number - 1]) {
-                // 受信データを取り出す
-                prev_seq[dev_number - 1] = seq_number;
-                td.dev_number = dev_number;
-                td.abnormal = (bool)data[3];
-                td.seq_number = seq_number;
-                td.temperature = (float)(data[6] << 8 | data[5]) / 100.00;
-                td.humidity = (float)(data[8] << 8 | data[7]) / 100.00;
-                if (!td.abnormal) {
-                    displayData(&td);
-                } else {
-                    displayAlarm(&td);
-                }
+            for (int i=0; i < data.length(); i++) {
+              Serial.print(data[i]);
             }
+            Serial.print(" / ");
+            Serial.print(data.c_str());
         }
+
+        Serial.println();
     } // for
     Serial.println();
 
