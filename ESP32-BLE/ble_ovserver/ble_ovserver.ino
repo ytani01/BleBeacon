@@ -4,124 +4,91 @@
 #include <BLEDevice.h>
 #include <Wire.h>                   // I2C interface
 
-#define SERIAL_SPEED   115200          // SERIAL通信速度
+#define SERIAL_SPEED   115200
+#define PIN_LED        2
+#define SCAN_SEC       2
+#define DEEP_SLEEP_SEC 20
+#define DEV_NAME       "ESP32"
 
-#define DEV_NAME "ESP32"         // 対象デバイス名
-#define MAX_DEVICES  32              // 最大デバイス数
-#define ManufacturerId 0xffff       // 既定のManufacturer ID
-const int scanning_time = 3;        // スキャン時間（秒）
-BLEScan* pBLEScan;                  // Scanオブジェクトへのポインター
-int prev_seq[MAX_DEVICES] = {
-  -1, -1, -1, -1, -1, -1, -1, -1,
-  -1, -1, -1, -1, -1, -1, -1, -1,
-  -1, -1, -1, -1, -1, -1, -1, -1,
-  -1, -1, -1, -1, -1, -1, -1, -1
-};
+#define LED_MODE_OFF 0
+#define LED_MODE_ON  1
+#define LED_MODE_BLINK 2
+int LedMode = LED_MODE_OFF;
 
-/* 受信データ構造体 */
-struct tmpData {
-    int     dev_number;          // デバイス識別番号
-    bool    abnormal;               // デバイス異常
-    int     seq_number;             // シーケンス番号
-    float   temperature;            // 温度
-    float   humidity;               // 湿度
-};
+#define COUNTOFF_MAX 2
+int CountOff = 0;
 
-/* LEDピン */
-const int ledPin = 2;              // LEDの接続ピン
+BLEScan*    pBLEScan;
+std::string MyAddrStr;
 
-/* プッシュボタン */
-const int buttonPin = 32;           // プッシュボタンの接続ピン
-
-/*****************************************************************************
- *                          Predetermined Sequence                           *
- *****************************************************************************/
+//
+// setup
+//
 void setup() {
-    doInitialize();                             // 初期化処理をして
-    BLEDevice::init("");                        // BLEデバイスを作成する
-    Serial.println("Client application start...");
-    pBLEScan = BLEDevice::getScan();            // Scanオブジェクトを取得して、
-    pBLEScan->setActiveScan(false);             // パッシブスキャンに設定する
+  Serial.begin(SERIAL_SPEED);
+
+  CountOff = 0;
+
+  pinMode(PIN_LED, OUTPUT);
+  digitalWrite(PIN_LED, HIGH);
+
+  BLEDevice::init("");
+  pBLEScan = BLEDevice::getScan();
+
+  MyAddrStr = BLEDevice::getAddress().toString();
+  Serial.println(("MyAddrStr=" + MyAddrStr).c_str());
+  //Serial.println(MyAddrStr.substr(0,9).c_str());
+    
+  pBLEScan->setActiveScan(false); // パッシブスキャン
+  Serial.println("start...");
+  digitalWrite(PIN_LED, LOW);
 }
 
+//
+// loop
+//
 void loop() {
-    struct tmpData td;
+  BLEScanResults foundDevices = pBLEScan->start(SCAN_SEC);
+  int count = foundDevices.getCount();
+  
+  if (LedMode == LED_MODE_ON) {
+    digitalWrite(PIN_LED, LOW);
+    delay(1000);
+  }
+  
+  LedMode = LED_MODE_OFF;
+  for (int i = 0; i < count; i++) {
+    BLEAdvertisedDevice dev = foundDevices.getDevice(i);
+    std::string dev_addr = dev.getAddress().toString();
+    std::string dev_name = dev.getName();
 
-    BLEScanResults foundDevices = pBLEScan->start(scanning_time);
-    int count = foundDevices.getCount();
+    Serial.print(dev.toString().c_str());
 
-    for (int i = 0; i < count; i++) {
-        BLEAdvertisedDevice dev = foundDevices.getDevice(i);
-	std::string dev_addr = dev.getAddress().toString();
-        std::string dev_name = dev.getName();
+    if (dev_name == DEV_NAME && dev.haveManufacturerData()) {
+      std::string data = dev.getManufacturerData();
+      Serial.print((" / data=" + data).c_str());
 
-        Serial.print(dev.toString().c_str());
-
-        /*
-	Serial.print(dev_addr.c_str());
-	Serial.print(" ");
-  	Serial.print(dev_name.c_str());
-	Serial.print(" ");
-
-	std::string dev_svcdata = dev.getServiceData();
-	String s = dev_svcdata.c_str();
-        Serial.print(s);
-        */
-        
-        /*
-	for (int j = 0; j < dev_svcdata.size(); j++) {
-	  Serial.print(sprintf("%02X ", (const char)s[j]));
-	}
-        */
-	
-        if (dev_name == DEV_NAME && dev.haveManufacturerData()) {
-            std::string data = dev.getManufacturerData();
-            Serial.print(" / data=");
-
-            for (int i=0; i < data.length(); i++) {
-              Serial.print(data[i]);
-            }
-            Serial.print(" / ");
-            Serial.print(data.c_str());
-        }
-
-        Serial.println();
+      if (data == "abc") {
+        Serial.print(" !!");
+        LedMode = LED_MODE_ON;
+      }
     } // for
+
     Serial.println();
-
-    // プッシュボタン押下でLEDを消灯してディスプレイ表示を消去する
-    int buttonState = digitalRead(buttonPin);
-    if (buttonState == HIGH) {
-        digitalWrite(ledPin, LOW);
+  }
+  
+  Serial.println("LedMode=" + String(LedMode));
+  if (LedMode == LED_MODE_ON) {
+    digitalWrite(PIN_LED, HIGH);
+    CountOff = 0;
+  } else { // LED_MODE_OFF
+    digitalWrite(PIN_LED, LOW);
+    CountOff++;
+    Serial.println("CountOff=" + String(CountOff));
+    if (CountOff > COUNTOFF_MAX) {
+      Serial.println("deep sleep " + String(DEEP_SLEEP_SEC) + " sec ..");
+      esp_deep_sleep(DEEP_SLEEP_SEC * 1000000LL);
     }
-}
-
-/*  初期化処理  */
-void doInitialize() {
-    Serial.begin(SERIAL_SPEED);
-    pinMode(buttonPin, INPUT);        // GPIO設定：プッシュボタン        
-    pinMode(ledPin, OUTPUT);          // GPIO設定：LED
-    digitalWrite(ledPin, LOW);
-
-    Serial.println("BLE Client start ...");
-}
-
-/*****************************< Other functions >*****************************/
-/* 受信データを表示する */
-void displayData(struct tmpData* td) {
-    char sTemp[10], sHumd[10];
-    sprintf(sTemp, "%5.2fC", td->temperature);
-    sprintf(sHumd, "%5.2f%%", td->humidity);
-    Serial.print("Received from device ");  Serial.print(td->dev_number);
-    Serial.print("  Data No.");             Serial.print(td->seq_number);
-    Serial.print("  Temperature: ");        Serial.print(sTemp);
-    Serial.print(",  Humidity: ");          Serial.println(sHumd);
-}
-
-/* デバイス異常を表示する */
-void displayAlarm(struct tmpData* td) {
-    Serial.print("*Device error No.");   Serial.println(td->dev_number);
-    digitalWrite(ledPin, HIGH);
-    char device[10];
-    sprintf(device, "  (%d)", td->dev_number);
+  }
+  Serial.println();
 }

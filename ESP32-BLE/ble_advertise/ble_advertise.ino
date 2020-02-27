@@ -20,21 +20,21 @@
 #define LED_ON	HIGH
 #define LED_OFF	LOW
 
-#define BUTTON_PIN 0
+#define DEEP_SLEEP_SEC 20
 
 #define MODE_OFF 0
 #define MODE_ON  1
 #define MODE_BLINK 2
+int LedMode = MODE_OFF;
 
-#define DEEP_SLEEP_SEC 20
+#define COUNTON_MAX 20
+#define COUNTOFF_MAX 5
+int CountOn  = 0;
+int CountOff = 0;
 
-int led_mode = MODE_OFF;
-int on_count = 0;
-int off_count = 0;
-#define ON_COUNT_MAX 20
-#define OFF_COUNT_MAX 20
-
-BLEAddress my_addr = BLEAddress("00:00:00:00:00:00");
+BLEServer      *pServer;
+BLEAdvertising *pAdvertising;
+BLEAddress     MyAddr = BLEAddress("00:00:00:00:00:00");
 
 class MyCallbacks: public BLECharacteristicCallbacks {
   void onConnect(BLEClient *pClient) {
@@ -60,14 +60,14 @@ class MyCallbacks: public BLECharacteristicCallbacks {
     }
 
     if (value == "on") {
-      led_mode = MODE_ON;
-      on_count = 0;
+      LedMode = MODE_ON;
+      CountOn = 0;
     } else if (value == "blink") {
-      led_mode = MODE_BLINK;
-      on_count = 0;
+      LedMode = MODE_BLINK;
+      CountOn = 0;
     } else {
-      led_mode = MODE_OFF;
-      off_count = 0;
+      LedMode = MODE_OFF;
+      CountOff = 0;
     }
   }
 };
@@ -75,7 +75,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
 void setup() {
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
-  led_mode = MODE_BLINK;
+  LedMode = MODE_BLINK;
 
   Serial.print("Start:");
   Serial.println(MY_NAME);
@@ -83,29 +83,14 @@ void setup() {
 
   // init device
   BLEDevice::init(MY_NAME);
-  my_addr = BLEDevice::getAddress();
-  Serial.print("my_addr=");
-  Serial.println(my_addr.toString().c_str());
+  MyAddr = BLEDevice::getAddress();
+  Serial.println("MyAddr=" + String(MyAddr.toString().c_str()));
 
   // init server, service, characteristic, and start service
-  BLEServer *pServer = BLEDevice::createServer();
-
-  /*
-  // init service
-  BLEService *pService = pServer->createService(SERVICE_UUID);
-  BLECharacteristic *pCharacteristic
-    = pService->createCharacteristic(
-				     CHARACTERISTIC_UUID,
-				     BLECharacteristic::PROPERTY_READ |
-				     BLECharacteristic::PROPERTY_WRITE
-				     );
-  pCharacteristic->setCallbacks(new MyCallbacks());
-  pCharacteristic->setValue(my_addr.toString().c_str());
-  pService->start();
-  */
+  pServer = BLEDevice::createServer();
 
   // start advertising
-  BLEAdvertising *pAdvertising = pServer->getAdvertising();
+  pAdvertising = pServer->getAdvertising();
   BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
   oAdvertisementData.setName(MY_NAME);
   oAdvertisementData.setFlags(0x06);
@@ -122,39 +107,32 @@ void loop() {
   while (Serial.available() > 0) {
     String buf = Serial.readStringUntil('\r');
     Serial.println(buf);
+
+    pAdvertising->stop();
+    delay(500);
+    BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
+    oAdvertisementData.setName(MY_NAME);
+    oAdvertisementData.setFlags(0x06);
+    oAdvertisementData.setManufacturerData(buf.c_str());
+    pAdvertising->setAdvertisementData(oAdvertisementData);
+    pAdvertising->start();
+
+    Serial.println(oAdvertisementData.getPayload().c_str());
   }
 
-  if (led_mode == MODE_ON) {
+  if (LedMode == MODE_ON) {
     digitalWrite(LED_PIN, LED_ON);
     delay(1000);
-    on_count++;
-  } else if (led_mode == MODE_BLINK) {
+    CountOn++;
+  } else if (LedMode == MODE_BLINK) {
     digitalWrite(LED_PIN, LED_ON);
     delay(300);
     digitalWrite(LED_PIN, LED_OFF);
     delay(700);
-    on_count++;
+    CountOn++;
   } else { // OFF
     digitalWrite(LED_PIN, LED_OFF);
     delay(1000);
-    off_count++;
-  }
-
-  if (led_mode == MODE_ON || led_mode == MODE_BLINK) {
-    Serial.print("on_count=");
-    Serial.println(String(on_count));
-    if (on_count >= ON_COUNT_MAX) {
-      led_mode = MODE_OFF;
-      off_count = 0;
-    }
-  } else { // MODE_OFF
-    Serial.print("off_count=");
-    Serial.println(String(off_count));
-    if (off_count >= OFF_COUNT_MAX) {
-      Serial.print("deep sleep:");
-      Serial.print(String(DEEP_SLEEP_SEC));
-      Serial.println("sec ..");
-      esp_deep_sleep(DEEP_SLEEP_SEC * 1000000LL);
-    }
+    CountOff++;
   }
 }
