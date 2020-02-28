@@ -22,55 +22,19 @@
 
 #define DEEP_SLEEP_SEC 20
 
-#define MODE_OFF 0
-#define MODE_ON  1
+#define MODE_OFF   0
+#define MODE_ON    1
 #define MODE_BLINK 2
 int LedMode = MODE_OFF;
 
-#define COUNTON_MAX 20
-#define COUNTOFF_MAX 5
+#define COUNTON_MAX  20
+#define COUNTOFF_MAX  5
 int CountOn  = 0;
 int CountOff = 0;
 
 BLEServer      *pServer;
 BLEAdvertising *pAdvertising;
 BLEAddress     MyAddr = BLEAddress("00:00:00:00:00:00");
-
-class MyCallbacks: public BLECharacteristicCallbacks {
-  void onConnect(BLEClient *pClient) {
-    Serial.println("> onConnect");
-  }
-
-  void OnDisconnect(BLEClient *pClient) {
-    Serial.println("> onDisconnect");
-  }
-
-  void onWrite(BLECharacteristic *pCharacteristic) {
-    Serial.println("> onWrite");
-    std::string value = pCharacteristic->getValue();
-    
-    Serial.print("value=");
-    Serial.println(value.c_str());
-    if (value.length() > 0) {
-      Serial.print("New value: ");
-      for (int i = 0; i < value.length(); i++) {
-	Serial.print(value[i]);
-      }
-      Serial.println();
-    }
-
-    if (value == "on") {
-      LedMode = MODE_ON;
-      CountOn = 0;
-    } else if (value == "blink") {
-      LedMode = MODE_BLINK;
-      CountOn = 0;
-    } else {
-      LedMode = MODE_OFF;
-      CountOff = 0;
-    }
-  }
-};
 
 void setup() {
   Serial.begin(115200);
@@ -85,20 +49,20 @@ void setup() {
   BLEDevice::init(MY_NAME);
   MyAddr = BLEDevice::getAddress();
   Serial.println("MyAddr=" + String(MyAddr.toString().c_str()));
-
+  
   // init server, service, characteristic, and start service
   pServer = BLEDevice::createServer();
-
+  
   // start advertising
   pAdvertising = pServer->getAdvertising();
   BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
   oAdvertisementData.setName(MY_NAME);
   oAdvertisementData.setFlags(0x06);
-  oAdvertisementData.setManufacturerData("abc");
-
+  oAdvertisementData.setManufacturerData("all");
+  
   pAdvertising->setAdvertisementData(oAdvertisementData);
   pAdvertising->start();
-
+  
   delay(1000);
   digitalWrite(LED_PIN, LED_OFF);
 }
@@ -107,7 +71,7 @@ void loop() {
   while (Serial.available() > 0) {
     String buf = Serial.readStringUntil('\r');
     Serial.println(buf);
-
+    
     pAdvertising->stop();
     delay(500);
     BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
@@ -116,19 +80,19 @@ void loop() {
     oAdvertisementData.setManufacturerData(buf.c_str());
     pAdvertising->setAdvertisementData(oAdvertisementData);
     pAdvertising->start();
-
+    
     Serial.println(oAdvertisementData.getPayload().c_str());
   }
-
+  
   if (LedMode == MODE_ON) {
     digitalWrite(LED_PIN, LED_ON);
     delay(1000);
     CountOn++;
   } else if (LedMode == MODE_BLINK) {
     digitalWrite(LED_PIN, LED_ON);
-    delay(300);
+    delay(200);
     digitalWrite(LED_PIN, LED_OFF);
-    delay(700);
+    delay(800);
     CountOn++;
   } else { // OFF
     digitalWrite(LED_PIN, LED_OFF);
@@ -136,3 +100,39 @@ void loop() {
     CountOff++;
   }
 }
+
+class MyCallbacks: public BLECharacteristicCallbacks {
+  void onConnect(BLEClient *pClient) {
+    Serial.println("> onConnect");
+  }
+  
+  void OnDisconnect(BLEClient *pClient) {
+    Serial.println("> onDisconnect");
+  }
+  
+  void onWrite(BLECharacteristic *pCharacteristic) {
+    Serial.println("> onWrite");
+    std::string value = pCharacteristic->getValue();
+    
+    Serial.print("value=");
+    Serial.println(value.c_str());
+    if (value.length() > 0) {
+      Serial.print("New value: ");
+      for (int i = 0; i < value.length(); i++) {
+	Serial.print(value[i]);
+      }
+      Serial.println();
+    }
+    
+    if (value == "on") {
+      LedMode = MODE_ON;
+      CountOn = 0;
+    } else if (value == "blink") {
+      LedMode = MODE_BLINK;
+      CountOn = 0;
+    } else {
+      LedMode = MODE_OFF;
+      CountOff = 0;
+    }
+  }
+};
