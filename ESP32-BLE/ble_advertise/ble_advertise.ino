@@ -73,7 +73,7 @@ void setup() {
 
 void loop() {
   while (Serial.available() > 0) {
-    String buf = Serial.readStringUntil('\r');
+    String buf = Serial.readStringUntil('\n');
     Serial.println(buf);
     if (buf.length() != 17) {
       int idx = buf.toInt();
