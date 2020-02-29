@@ -36,6 +36,13 @@ BLEServer      *pServer;
 BLEAdvertising *pAdvertising;
 BLEAddress     MyAddr = BLEAddress("00:00:00:00:00:00");
 
+String DevID[] = {
+  "30:ae:a4:99:a2:02",
+  "24:0a:c4:11:e6:1a"
+};
+int TouchPin[] = {T0, T7};
+int TouchDefaults[] = {0, 0};
+
 void setup() {
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
@@ -65,11 +72,40 @@ void setup() {
   
   delay(1000);
   digitalWrite(LED_PIN, LED_OFF);
+
+  for (int i=0; i < 2; i++) {
+    TouchDefaults[i] = touchRead(TouchPin[i]);
+    Serial.println("TouchDefaults[" + String(i) + "]="
+                   + String(TouchDefaults[i]));
+  }
 }
 
 void loop() {
-  while (Serial.available() > 0) {
-    String buf = Serial.readStringUntil('\r');
+  bool touch_on[] = {false, false};
+
+  Serial.print("v = ");
+  for (int i=0; i < 2; i++) {
+    touch_on[i] = false;
+    int v = touchRead(TouchPin[i]);
+    Serial.print(String(v) + " ");
+
+    if (v < TouchDefaults[i] * 0.5) {
+      touch_on[i] = true;
+    }
+  }
+  Serial.println();
+
+  String buf = "";
+  if (touch_on[0] && touch_on[1]) {
+    buf = "all";
+  } else if (touch_on[0]) {
+    buf = DevID[0];
+  } else if (touch_on[1]) {
+    buf = DevID[1];
+  } else {
+    buf = "";
+  }
+  if (buf != "") {
     Serial.println(buf);
     
     pAdvertising->stop();
@@ -83,7 +119,29 @@ void loop() {
     
     Serial.println(oAdvertisementData.getPayload().c_str());
   }
-  
+
+  while (Serial.available() > 0) {
+    String buf = Serial.readStringUntil('\r');
+    Serial.println(buf);
+    if (buf.length() <= 2) {
+      int idx = buf.toInt();
+      if (idx < 2) {
+        buf = DevID[idx];
+      }
+    }
+    
+    pAdvertising->stop();
+    delay(500);
+    BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
+    oAdvertisementData.setName(MY_NAME);
+    oAdvertisementData.setFlags(0x06);
+    oAdvertisementData.setManufacturerData(buf.c_str());
+    pAdvertising->setAdvertisementData(oAdvertisementData);
+    pAdvertising->start();
+    
+    Serial.println(oAdvertisementData.getPayload().c_str());
+  }
+
   if (LedMode == MODE_ON) {
     digitalWrite(LED_PIN, LED_ON);
     delay(1000);
