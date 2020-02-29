@@ -26,13 +26,13 @@
 #define MODE_ON  1
 #define MODE_BLINK 2
 
-#define DEEP_SLEEP_SEC 30
+#define DEEP_SLEEP_SEC 20
 
 int led_mode = MODE_OFF;
 int on_count = 0;
 int off_count = 0;
-#define ON_COUNT_MAX 60
-#define OFF_COUNT_MAX 60
+#define ON_COUNT_MAX 20
+#define OFF_COUNT_MAX 20
 
 BLEAddress my_addr = BLEAddress("00:00:00:00:00:00");
 
@@ -118,19 +118,10 @@ void setup() {
   digitalWrite(LED_PIN, LED_OFF);
 }
 
-char buf[256];
-int idx = 0;
-
 void loop() {
   while (Serial.available() > 0) {
-    buf[idx] = Serial.read();
-    Serial.println(String(buf[idx]));
-    idx++;
-  }
-  if (buf[idx - 1] == 13) {
-    buf[idx] ==  0;
-    Serial.println(String(buf));
-    idx = 0;
+    String buf = Serial.readStringUntil('\r');
+    Serial.println(buf);
   }
 
   if (led_mode == MODE_ON) {
