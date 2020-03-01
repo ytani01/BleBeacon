@@ -50,7 +50,7 @@ void setup() {
   Serial.println(String(sizeof(DevID)/sizeof(DevID[0])));
 
   // init device
-  BLEDevice::init(MY_NAME);
+  BLEDevice::init("aaaaa");
   MyAddr = BLEDevice::getAddress();
   Serial.println("MyAddr=" + String(MyAddr.toString().c_str()));
   
@@ -72,29 +72,70 @@ void setup() {
 }
 
 void loop() {
+  static char buf[32];
+  String buf_str;
+  static int buf_i = 0;
+  int ch;
+  static bool eol = false;
+  static bool num = true;
+
+  eol = false;
   while (Serial.available() > 0) {
-    String buf = Serial.readStringUntil('\n');
-    Serial.println(buf);
-    if (buf != "all") {
-      if (buf.length() != 17) {
-        int idx = buf.toInt();
-        if (idx < 2) {
-          buf = DevID[idx];
+    ch = Serial.read();
+    Serial.println("ch=" + String(ch, HEX));
+    if (ch == -1) {
+      continue;
+    }
+    if (ch == '\r' || ch == '\n') {
+      ch = NULL;
+      eol = true;
+    }
+      
+    buf[buf_i++] = ch;
+    if (ch == NULL) {
+      buf_i = 0;
+      break;
+    }
+  } // while
+
+  if (eol) {
+    buf_str = String(buf);
+    Serial.println("buf=" + buf_str + ".");
+    eol = false;
+
+    if (buf[0] != NULL) {
+      if (buf_str != "all") {
+        if (buf_str.length() != MyAddr.toString().length()) {
+          bool num = true;
+          for (int i=0; i < buf_str.length(); i++) {
+            if (! isDigit(buf_str[i])) {
+              num = false;
+              break;
+            }
+          }
+          if (num) {
+            int idx = buf_str.toInt();
+            buf_str = DevID[idx];
+          } else {
+            buf_str = "xxx";
+          }
         }
       }
+    
+      pAdvertising->stop();
+      delay(500);
+
+      BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
+      oAdvertisementData.setName(MY_NAME);
+      oAdvertisementData.setFlags(0x06);
+      oAdvertisementData.setManufacturerData(buf_str.c_str());
+
+      pAdvertising->setAdvertisementData(oAdvertisementData);
+      pAdvertising->start();
+      
+      Serial.println(oAdvertisementData.getPayload().c_str());
     }
-    
-    pAdvertising->stop();
-    delay(500);
-    BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
-    oAdvertisementData.setName(MY_NAME);
-    oAdvertisementData.setFlags(0x06);
-    oAdvertisementData.setManufacturerData(buf.c_str());
-    pAdvertising->setAdvertisementData(oAdvertisementData);
-    pAdvertising->start();
-    
-    Serial.println(oAdvertisementData.getPayload().c_str());
-  }
+  } // if (eol)
 
   if (LedMode == MODE_ON) {
     digitalWrite(LED_PIN, LED_ON);
