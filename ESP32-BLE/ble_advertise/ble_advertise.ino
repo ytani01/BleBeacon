@@ -75,10 +75,12 @@ void loop() {
   while (Serial.available() > 0) {
     String buf = Serial.readStringUntil('\n');
     Serial.println(buf);
-    if (buf.length() != 17) {
-      int idx = buf.toInt();
-      if (idx < 2) {
-        buf = DevID[idx];
+    if (buf != "all") {
+      if (buf.length() != 17) {
+        int idx = buf.toInt();
+        if (idx < 2) {
+          buf = DevID[idx];
+        }
       }
     }
     
