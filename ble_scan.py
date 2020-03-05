@@ -9,6 +9,7 @@ __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'
 
 import bluepy
+import sys
 import time
 from MyLogger import get_logger
 
@@ -34,32 +35,75 @@ class BleDev:
 
         devs = self._scanner.scan(sec)
 
-        dev_count = 0;
+        dev_count = 0
         for dev in devs:
             if self._addr_hdr is not None:
                 if not dev.addr.startswith(self._addr_hdr):
                     continue
 
             dev_count += 1
-            self._log.info('(%02d) %s [%s]', dev_count, dev.addr, dev.addrType)
+            print('----------')
+            print('|%02d|%s|%s|' % (dev_count, dev.addr, dev.addrType))
+            sys.stdout.flush()
 
-            if dev.addrType != bluepy.btle.ADDR_TYPE_PUBLIC:
-                continue
+            # if dev.addrType != bluepy.btle.ADDR_TYPE_PUBLIC:
+            #     continue
 
+            conn_flag = False
             for (adtype, desc, val) in dev.getScanData():
-                self._log.info('    %02X|%s|%s|', adtype, desc, val)
+                print(' |%02X|%s|%s|' % (adtype, desc, val))
+                sys.stdout.flush()
+
                 if self._val_keyword is not None:
-                    if self._val_keyword not in val:
-                        peri = bluepy.btle.Peripheral()
-                        peri.connect(dev.addr)
-                        time.sleep(1)
-                        peri.disconnect()
-                        continue
+                    if self._val_keyword in val:
+                        conn_flag = True
+                    else:
+                        pass
+                else:
+                    conn_flag = True
+
+            if conn_flag:
+                try:
+                    peri = bluepy.btle.Peripheral(dev.addr)
+                    self._log.debug('connected')
+                    sys.stdout.flush()
+
+                    for svc in peri.getServices():
+                        print('  |svc|%s|' % (svc.uuid))
+
+                        desc = svc.getDescriptors()
+                        """
+                        for d in svc.getDescriptors():
+                            print('   |desc|%s|%s|%s|' % (d.handle, d.uuid,
+                                                          str(d)))
+                        sys.stdout.flush()
+                        """
+                        for chara in svc.getCharacteristics():
+                            print('   |chara|%s|' % chara.uuid)
+                            print('    |handle    |%s|' % chara.getHandle())
+                            print('    |properties|%s|' %
+                                  chara.propertiesToString())
+                            for d in desc:
+                                if chara.uuid == d.uuid:
+                                    print('    |%s|' % str(d))
+                                    
+                            sys.stdout.flush()
+
+                    peri.disconnect()
+
+                except bluepy.btle.BTLEDisconnectError as e:
+                    self._log.error('%s:%s', type(e), e)
+                    continue
+
+                except Exception as e:
+                    self._log.error('%s:%s', type(e), e)
 
         print('')
 
 
 class App:
+    DEF_SCAN_SEC = 3
+    
     def __init__(self, val_keyword=None, debug=False):
         self._debug = debug
         self._log = get_logger(__class__.__name__, self._debug)
@@ -70,7 +114,7 @@ class App:
     def main(self):
         self._log.debug('')
         while True:
-            self._bledev.scan(5)
+            self._bledev.scan(self.DEF_SCAN_SEC)
             time.sleep(0.1)
 
     def end(self):
