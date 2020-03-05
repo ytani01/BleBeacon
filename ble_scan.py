@@ -14,16 +14,16 @@ from MyLogger import get_logger
 
 
 class BleDev:
-    def __init__(self, scanner=None, addr_hdr=None, data_keyword=None,
+    def __init__(self, scanner=None, addr_hdr=None, val_keyword=None,
                  debug=False):
         self._debug = debug
         self._log = get_logger(__class__.__name__, self._debug)
-        self._log.debug('scanner=%s, addr_hdr=%s, data_keyword=%s',
-                        scanner, addr_hdr, data_keyword)
+        self._log.debug('scanner=%s, addr_hdr=%s, val_keyword=%s',
+                        scanner, addr_hdr, val_keyword)
 
         self._scanner = scanner
         self._addr_hdr = addr_hdr
-        self._data_keyword = data_keyword
+        self._val_keyword = val_keyword
 
         if self._scanner is None:
             self._scanner = bluepy.btle.Scanner(0)
@@ -41,25 +41,31 @@ class BleDev:
                     continue
 
             dev_count += 1
-            print('(%02d)%s' % (dev_count, dev.addr))
+            self._log.info('(%02d) %s [%s]', dev_count, dev.addr, dev.addrType)
+
+            if dev.addrType != bluepy.btle.ADDR_TYPE_PUBLIC:
+                continue
 
             for (adtype, desc, val) in dev.getScanData():
-                if self._data_keyword is not None:
-                    if desc != self._data_keyword:
+                self._log.info('    %02X|%s|%s|', adtype, desc, val)
+                if self._val_keyword is not None:
+                    if self._val_keyword not in val:
+                        peri = bluepy.btle.Peripheral()
+                        peri.connect(dev.addr)
+                        time.sleep(1)
+                        peri.disconnect()
                         continue
-
-                print('    %02X:%s: %s' % (adtype, desc, val))
 
         print('')
 
 
 class App:
-    def __init__(self, debug=False):
+    def __init__(self, val_keyword=None, debug=False):
         self._debug = debug
         self._log = get_logger(__class__.__name__, self._debug)
         self._log.debug('')
 
-        self._bledev = BleDev(debug=self._debug)
+        self._bledev = BleDev(val_keyword=val_keyword, debug=self._debug)
 
     def main(self):
         self._log.debug('')
@@ -78,14 +84,16 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.command(context_settings=CONTEXT_SETTINGS, help='''
 BLE Device Scanner
 ''')
+@click.option('--val_keyword', '-v', 'val_keyword', type=str, default=None,
+              help="value keyword")
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def main(debug):
+def main(val_keyword, debug):
     logger = get_logger(__name__, debug)
-    logger.debug('')
+    logger.debug('val_keyword=%s', val_keyword)
 
     logger.info('start')
-    app = App(debug=debug)
+    app = App(val_keyword=val_keyword, debug=debug)
     try:
         app.main()
     finally:
