@@ -79,14 +79,19 @@ class BleDev:
                         sys.stdout.flush()
                         """
                         for chara in svc.getCharacteristics():
+                            props = chara.propertiesToString()
+                            
                             print('   |chara|%s|' % chara.uuid)
                             print('    |handle    |%s|' % chara.getHandle())
-                            print('    |properties|%s|' %
-                                  chara.propertiesToString())
+                            print('    |properties|%s|' % props)
                             for d in desc:
                                 if chara.uuid == d.uuid:
                                     print('    |%s|' % str(d))
-                                    
+
+                            if 'READ' in props:
+                                value = chara.read()
+                                print('    |value|%s|' % value)
+
                             sys.stdout.flush()
 
                     peri.disconnect()
