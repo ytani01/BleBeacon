@@ -19,7 +19,7 @@ class ApproachCharacteristic(Characteristic):
         self._updateValueCallback = None
 
     def onReadRequest(self, offset, callback):
-        print()
+        print('onReadRequest:value=%s' % (self._value))
         callback(Characteristic.RESULT_SUCCESS, self._value)
 
     def onSubscribe(self, maxValueSize, updateValueCallback):
