@@ -40,7 +40,7 @@ String DevID[] = {
 
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   pinMode(LED_PIN, OUTPUT);
   LedMode = MODE_BLINK;
 
@@ -84,7 +84,7 @@ void loop() {
     ch = Serial.read();
     Serial.println("ch=" + String(ch, HEX));
     if (ch == -1) {
-      continue;
+      break;
     }
     if (ch == '\r' || ch == '\n') {
       ch = NULL;
