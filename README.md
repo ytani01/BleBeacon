@@ -52,4 +52,6 @@ connectのリトライは1回まで？
 
 * [bluepy](https://github.com/IanHarvey/bluepy)
 
+* [RPi Bluetooth LE](https://www.elinux.org/RPi_Bluetooth_LE)
+
 * [bluepyで始めるBluetooth Low Energy(BLE)プログラミング](https://www.ipride.co.jp/blog/2510)
