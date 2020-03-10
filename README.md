@@ -53,3 +53,7 @@ connectのリトライは1回まで？
 * [bluepy](https://github.com/IanHarvey/bluepy)
 
 * [bluepyで始めるBluetooth Low Energy(BLE)プログラミング](https://www.ipride.co.jp/blog/2510)
+
+### SwitchBot
+
+* [OpenWonderLabs](https://github.com/OpenWonderLabs/python-host/wiki/Meter-BLE-open-API)
