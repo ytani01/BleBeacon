@@ -16,6 +16,7 @@ quit
 (env-ble)$ sudo systemctl restart bluetooth.service
 ```
 
+
 ## bluepyの罠？
 
 * scanの間隔が難しい：短すぎると見つからない。長すぎるとエラー。(5～10秒？)
@@ -31,6 +32,7 @@ connectのリトライは1回まで？
 * Characteristics の read も不安定：リトライが必要
 
 * 以上の処理をしても失敗することがある。
+
 
 
 ## Reference
