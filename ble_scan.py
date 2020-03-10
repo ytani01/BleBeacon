@@ -8,30 +8,12 @@ BLE Beacon
 __author__ = 'Yoichi Tanibayashi'
 __date__   = '2020'
 
-<<<<<<< HEAD
-import bluepy
-import sys
-=======
 from bluepy import btle
->>>>>>> master
 import time
 import binascii
 from MyLogger import get_logger
 
 
-<<<<<<< HEAD
-class BleDev:
-    def __init__(self, scanner=None, addr_hdr=None, val_keyword=None,
-                 debug=False):
-        self._debug = debug
-        self._log = get_logger(__class__.__name__, self._debug)
-        self._log.debug('scanner=%s, addr_hdr=%s, val_keyword=%s',
-                        scanner, addr_hdr, val_keyword)
-
-        self._scanner = scanner
-        self._addr_hdr = addr_hdr
-        self._val_keyword = val_keyword
-=======
 class ScanDelegate(btle.DefaultDelegate):
     _log = None
 
@@ -39,7 +21,6 @@ class ScanDelegate(btle.DefaultDelegate):
         self._dbg = debug
         __class__._log = get_logger(__class__.__name__, self._dbg)
         self._log.debug('')
->>>>>>> master
 
         self._ble_scan = ble_scan
 
@@ -48,77 +29,6 @@ class ScanDelegate(btle.DefaultDelegate):
 
         self._ble_scan.devs.append(dev)
 
-<<<<<<< HEAD
-        dev_count = 0
-        for dev in devs:
-            if self._addr_hdr is not None:
-                if not dev.addr.startswith(self._addr_hdr):
-                    continue
-
-            dev_count += 1
-            print('----------')
-            print('|%02d|%s|%s|' % (dev_count, dev.addr, dev.addrType))
-            sys.stdout.flush()
-
-            # if dev.addrType != bluepy.btle.ADDR_TYPE_PUBLIC:
-            #     continue
-
-            conn_flag = False
-            for (adtype, desc, val) in dev.getScanData():
-                print(' |%02X|%s|%s|' % (adtype, desc, val))
-                sys.stdout.flush()
-
-                if self._val_keyword is not None:
-                    if self._val_keyword in val:
-                        conn_flag = True
-                    else:
-                        pass
-                else:
-                    conn_flag = True
-
-            if conn_flag:
-                try:
-                    peri = bluepy.btle.Peripheral(dev.addr)
-                    self._log.debug('connected')
-                    sys.stdout.flush()
-
-                    for svc in peri.getServices():
-                        print('  |svc|%s|' % (svc.uuid))
-
-                        desc = svc.getDescriptors()
-                        """
-                        for d in svc.getDescriptors():
-                            print('   |desc|%s|%s|%s|' % (d.handle, d.uuid,
-                                                          str(d)))
-                        sys.stdout.flush()
-                        """
-                        for chara in svc.getCharacteristics():
-                            handle = chara.getHandle()
-                            props = chara.propertiesToString()
-                            
-                            print('   |chara|%s|' % chara.uuid)
-                            print('    |handle    |%s|' % handle)
-                            print('    |properties|%s|' % props)
-                            for d in desc:
-                                if chara.uuid == d.uuid:
-                                    print('    |%s|' % str(d))
-
-                            if 'READ' in props:
-                                value = peri.readCharacteristic(handle)
-                                print('    |value|%s|' % value)
-
-                            sys.stdout.flush()
-
-                    peri.disconnect()
-
-                except bluepy.btle.BTLEDisconnectError as e:
-                    self._log.error('%s:%s', type(e), e)
-                    continue
-
-                except Exception as e:
-                    self._log.error('%s:%s', type(e), e)
-                    peri.disconnect()
-=======
         name = ''
         for (adtype, desc, val) in dev.getScanData():
             if 'Local Name' in desc:
@@ -134,7 +44,6 @@ class ScanDelegate(btle.DefaultDelegate):
 
 class BleScan:
     _log = None
->>>>>>> master
 
     def __init__(self, hci=0, debug=False):
         self._dbg = debug
@@ -143,23 +52,6 @@ class BleScan:
 
         self._hci = hci
 
-<<<<<<< HEAD
-class App:
-    DEF_SCAN_SEC = 3
-    
-    def __init__(self, val_keyword=None, debug=False):
-        self._debug = debug
-        self._log = get_logger(__class__.__name__, self._debug)
-        self._log.debug('')
-
-        self._bledev = BleDev(val_keyword=val_keyword, debug=self._debug)
-
-    def main(self):
-        self._log.debug('')
-        while True:
-            self._bledev.scan(self.DEF_SCAN_SEC)
-            time.sleep(0.1)
-=======
         self._delegate = ScanDelegate(self, debug=self._dbg)
         self._scanner = btle.Scanner(self._hci).withDelegate(self._delegate)
 
@@ -346,7 +238,6 @@ class App:
         self._log.debug('dev_name=%s', self._ble_scan.dev_name)
 
         self._ble_scan.scan_svc(devs2, self._conn_retry)
->>>>>>> master
 
     def end(self):
         self._log.debug('')
@@ -360,18 +251,6 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.command(context_settings=CONTEXT_SETTINGS, help='''
 BLE Device Scanner
 ''')
-<<<<<<< HEAD
-@click.option('--val_keyword', '-v', 'val_keyword', type=str, default=None,
-              help="value keyword")
-@click.option('--debug', '-d', 'debug', is_flag=True, default=False,
-              help='debug flag')
-def main(val_keyword, debug):
-    logger = get_logger(__name__, debug)
-    logger.debug('val_keyword=%s', val_keyword)
-
-    logger.info('start')
-    app = App(val_keyword=val_keyword, debug=debug)
-=======
 @click.option('--hci', '-i', 'hci', type=int, default=0,
               help='Interface number for scan')
 @click.option('--timout', '-t', 'timeout', type=int, default=3,
@@ -386,7 +265,6 @@ def main(hci, timeout, conn_retry, debug):
 
     logger.info('start')
     app = App(hci, timeout, conn_retry, debug=debug)
->>>>>>> master
     try:
         app.main()
     finally:
