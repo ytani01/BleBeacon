@@ -262,6 +262,14 @@ class App:
     def main(self):
         self._log.debug('')
 
+
+        '''
+        d = btle.Peripheral('b8:27:eb:cd:1b:ee')
+        for s in d.services:
+            print(str(s))
+        return
+        '''
+    
         print('=====< Scan start >=====')
         devs = self._ble_scan.scan()
         print('=====< Scan end >=====')
