@@ -63,6 +63,56 @@ class BleScan:
 
         self.devs = []
 
+    def scan(self, scan_timeout=None):
+        self._log.debug('scan_timeout=%s', scan_timeout)
+
+        if scan_timeout is None:
+            scan_timeout = self.scan_timeout
+            self._log.debug('scan_timeout=%s', scan_timeout)
+
+        devs = self._scanner.scan(scan_timeout, passive=False)
+        return devs
+
+    def dev_info(self, dev, dev_data=True,
+                 conn_retry=3, get_chara=3, read_chara=3):
+        self._log.debug('dev_data=%s', dev_data)
+        self._log.debug('conn_retry=%s, get_chara=%s, read_chara=%s',
+                        conn_retry, get_chara, read_chara)
+
+        print(self.dev2string(dev))
+
+        if dev_data:
+            self.dev_data(dev, indent=4)
+
+        if not dev.connectable:
+            return
+
+        if conn_retry < 1:
+            return
+
+        count = 0  # < 0: OK
+        while count < conn_retry:
+            try:
+                with btle.Peripheral(dev, dev.addrType) as peri:
+                    self._log.debug('Connection: OK .. %d/%d',
+                                    count + 1, conn_retry)
+                    self.dump_svc(peri, get_chara, read_chara, indent=2)
+                    count = -1
+                break
+            except btle.BTLEDisconnectError as e:
+                self._log.debug('%s:%s', type(e).__name__, e)
+                self._log.warning('Connection: NG .. %d/%d',
+                                  count + 1, conn_retry)
+                count += 1
+            except Exception as e:
+                self._log.warning('%s:%s', type(e).__name__, e)
+                self._log.warning('Connection: NG .. %d/%d',
+                                  count + 1, conn_retry)
+                count += 1
+
+    def end(self):
+        self._log.debug('')
+
     @classmethod
     def dev2string(cls, dev):
         cls._log.debug('')
@@ -187,56 +237,6 @@ class BleScan:
         print('%sValue: %s' % (indent_str, val_str1))
         if val_str2 != '':
             print('%s       %s' % (indent_str, val_str2))
-
-    def scan(self, scan_timeout=None):
-        self._log.debug('scan_timeout=%s', scan_timeout)
-
-        if scan_timeout is None:
-            scan_timeout = self.scan_timeout
-            self._log.debug('scan_timeout=%s', scan_timeout)
-
-        devs = self._scanner.scan(scan_timeout, passive=False)
-        return devs
-
-    def dev_info(self, dev, dev_data=True,
-                 conn_retry=3, get_chara=3, read_chara=3):
-        self._log.debug('dev_data=%s', dev_data)
-        self._log.debug('conn_retry=%s, get_chara=%s, read_chara=%s',
-                        conn_retry, get_chara, read_chara)
-
-        print(self.dev2string(dev))
-
-        if dev_data:
-            self.dev_data(dev, indent=4)
-
-        if not dev.connectable:
-            return
-
-        if conn_retry < 1:
-            return
-
-        count = 0  # < 0: OK
-        while count < conn_retry:
-            try:
-                with btle.Peripheral(dev, dev.addrType) as peri:
-                    self._log.debug('Connection: OK .. %d/%d',
-                                    count + 1, conn_retry)
-                    self.dump_svc(peri, get_chara, read_chara, indent=2)
-                    count = -1
-                break
-            except btle.BTLEDisconnectError as e:
-                self._log.debug('%s:%s', type(e).__name__, e)
-                self._log.warning('Connection: NG .. %d/%d',
-                                  count + 1, conn_retry)
-                count += 1
-            except Exception as e:
-                self._log.warning('%s:%s', type(e).__name__, e)
-                self._log.warning('Connection: NG .. %d/%d',
-                                  count + 1, conn_retry)
-                count += 1
-
-    def end(self):
-        self._log.debug('')
 
 
 class App:
