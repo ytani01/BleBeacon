@@ -1,4 +1,6 @@
-# setup
+# 
+
+## setup
 
 ```bash
 $ cd
@@ -14,8 +16,24 @@ quit
 (env-ble)$ sudo systemctl restart bluetooth.service
 ```
 
+## BLEの罠？
 
-# Reference
+* scanの間隔が難しい：短すぎると見つからない。長すぎるとエラー。(5～10秒？)
+
+* scan中に(handleDiscoveryで)、詳細情報を取得しようとすると、
+scanがエラー終了することがある。
+connectのリトライは1回まで？
+
+* Peripheralへのconnectが不安定：リトライが必要
+
+* getCharacteristics も不安定：リトライが必要
+
+* Characteristics の read も不安定：リトライが必要
+
+* 以上の処理をしても失敗することがある。
+
+
+## Reference
 
 * [bluepy](https://github.com/IanHarvey/bluepy)
 
