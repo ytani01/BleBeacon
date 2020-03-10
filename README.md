@@ -16,7 +16,7 @@ quit
 (env-ble)$ sudo systemctl restart bluetooth.service
 ```
 
-## BLEの罠？
+## bluepyの罠？
 
 * scanの間隔が難しい：短すぎると見つからない。長すぎるとエラー。(5～10秒？)
 
@@ -36,7 +36,7 @@ connectのリトライは1回まで？
 ## Reference
 
 ### BLE
-* [BLE Docs](https://sites.google.com/a/gclue.jp/ble-docs/advertising-1/advertising#TOC-Ad-Structure)
+* [BLE Docs](https://sites.google.com/a/gclue.jp/ble-docs/advertising-1/advertising)
 
 * [codes for distinct appearances](https://www.bluetooth.com/wp-content/uploads/Sitecore-Media-Library/Gatt/Xml/Characteristics/org.bluetooth.characteristic.gap.appearance.xml)
 
