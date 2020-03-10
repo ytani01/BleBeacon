@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+#
+# usage:
+#   sudo ./BlePeripheraral.py -d
+#
 
 from pybleno import Bleno, BlenoPrimaryService, Characteristic
 import time
@@ -6,15 +10,13 @@ import click
 from MyLogger import get_logger
 
 
-class BleEcho:
-    MY_NAME = 'echo'
-    UUID_SERVICE1 = 'ec00'
-    UUID_CHARACTERISTIC1 = 'ec0F'
-
-    def __init__(self, debug=False):
+class BlePeripheral:
+    def __init__(self, svcs=[], debug=False):
         self._dbg = debug
         self._log = get_logger(__class__.__name__, self._dbg)
         self._log.debug('')
+
+        self._svcs = svcs
 
         self._bleno = Bleno()
         self._bleno.on('stateChange', self.onStateChange)
@@ -32,31 +34,31 @@ class BleEcho:
     def onStateChange(self, state):
         self._log.debug('state=%s', state)
 
+        uuids = [u.UUID for u in self._svcs]
+        self._log.debug('uuids=%s', uuids)
+
         if (state == 'poweredOn'):
-            self._bleno.startAdvertising(self.MY_NAME, [
-                self.UUID_SERVICE1
-            ])
+            self._bleno.startAdvertising(self.MY_NAME, uuids)
         else:
             self._bleno.stopAdvertising()
 
     def onAdvertisingStart(self, error):
         self._log.debug('error=%s', error)
 
-        chara = EchoCharacteristic(self.UUID_CHARACTERISTIC1, debug=self._dbg)
-        svc = BlenoPrimaryService({'uuid': self.UUID_SERVICE1,
-                                   'characteristics': [chara]})
         if not error:
-            self._bleno.setServices([svc])
+            self._bleno.setServices(self._svcs)
 
 
 class EchoCharacteristic(Characteristic):
-    def __init__(self, uuid, debug=False):
+    UUID = 'ec0F'
+
+    def __init__(self, debug=False):
         self._dbg = debug
         self._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('uuid=%s', uuid)
+        self._log.debug('')
 
         super().__init__({
-            'uuid': uuid,
+            'uuid': self.UUID,
             'properties': ['read', 'write', 'notify'],
             'value': None
         })
@@ -71,9 +73,10 @@ class EchoCharacteristic(Characteristic):
         callback(Characteristic.RESULT_SUCCESS, self._value[offset:])
 
     def onWriteRequest(self, data, offset, withoutResponse, callback):
-        self._log.debug('data=%s', data)
+        self._log.debug('data=%s, offset=%s', data, offset)
 
-        self._value = data
+        self._value = data[offset:]
+        self._log.debug('_value=%s', self._value)
 
         if self._updateValueCallback:
             self._log.info('notifying')
@@ -89,6 +92,32 @@ class EchoCharacteristic(Characteristic):
     def onUnsubscribe(self):
         self._log.debug('')
         self._updateValueCallback = None
+
+
+class EchoService(BlenoPrimaryService):
+    UUID = 'ec00'
+
+    def __init__(self, charas=[], debug=False):
+        self._dbg = debug
+        self._log = get_logger(__class__.__name__, self._dbg)
+        # self._log.debug('charas=%s', charas)
+        self._log.debug('')
+
+        super().__init__({'uuid': self.UUID, 'characteristics': charas})
+
+
+class BleEcho(BlePeripheral):
+    MY_NAME = 'echo'
+
+    def __init__(self, debug=False):
+        self._dbg = debug
+        self._log = get_logger(__class__.__name__, self._dbg)
+        self._log.debug('')
+
+        self._chara1 = EchoCharacteristic(debug=self._dbg)
+        self._svc1 = EchoService([self._chara1], debug=self._dbg)
+
+        super().__init__([self._svc1], debug=self._dbg)
 
 
 class App:
