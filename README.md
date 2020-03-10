@@ -1,4 +1,4 @@
-# 
+# BleBeacon
 
 ## setup
 
@@ -35,18 +35,19 @@ connectのリトライは1回まで？
 
 ## Reference
 
-* [bluepy](https://github.com/IanHarvey/bluepy)
-
+### BLE
 * [BLE Docs](https://sites.google.com/a/gclue.jp/ble-docs/advertising-1/advertising#TOC-Ad-Structure)
-
-* [Arduino core for the ESP32](https://github.com/espressif/arduino-esp32)
 
 * [codes for distinct appearances](https://www.bluetooth.com/wp-content/uploads/Sitecore-Media-Library/Gatt/Xml/Characteristics/org.bluetooth.characteristic.gap.appearance.xml)
 
+### ESP32
+
+* [Arduino core for the ESP32](https://github.com/espressif/arduino-esp32)
+
 * [ESP32による近距離無線通信の実験（2）BLE通信](http://marchan.e5.valueserver.jp/cabin/comp/jbox/arc212/index212.html)
 
-* [BLE環境センサー・ゲートウェイ(Raspberry Pi編)](https://ambidata.io/samples/temphumid/ble_gw/)
+### bluepy
 
-## bluepy
+* [bluepy](https://github.com/IanHarvey/bluepy)
 
 * [bluepyで始めるBluetooth Low Energy(BLE)プログラミング](https://www.ipride.co.jp/blog/2510)
