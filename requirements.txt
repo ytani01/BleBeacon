@@ -1,3 +1,4 @@
 bluepy
 Click
 pybleno
+paho-mqtt

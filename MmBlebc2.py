@@ -18,6 +18,8 @@ class MmBleBc2ScanDelegate(ScanDelegate):
 
 
 class MmBlebc2(BleScan):
+    SVC_UUID = '0000ffe1-0000-1000-8000-00805f9b34fb'
+
     _log = None
 
     def __init__(self, uuids=(), hci=0, scan_timeout=5, debug=False):
@@ -42,13 +44,17 @@ class MmBlebc2(BleScan):
         cls._log.debug('indent=%s', indent)
         super().dev_data(dev, indent)
 
+        svc_ok = False
         data = ''
         for (adtype, desc, val) in dev.getScanData():
+            if desc == 'Complete 16b Services':
+                if val == cls.SVC_UUID:
+                    svc_ok = True
+
             if desc == '16b Service Data':
                 data = val
-                cls._log.debug('data=%s', data)
 
-        cls._log.debug('data=%s', data)
+        cls._log.debug('svc_ok=%s, data=%s', svc_ok, data)
         if len(data) == 0:
             return None
 
@@ -78,7 +84,11 @@ class MmBlebc2(BleScan):
     def hexstr2float(cls, data):
         cls._log.debug('data=%s', data)
 
-        return float(int(data, 16) / 256.0)
+        try:
+            return float(int(data, 16) / 256.0)
+        except Exception as e:
+            cls._log.warning('%s:%s', type(e).__class__, e)
+            return -1
 
 
 class App2(App):
