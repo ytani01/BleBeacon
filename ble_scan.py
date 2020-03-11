@@ -47,6 +47,7 @@ class ScanDelegate(btle.DefaultDelegate):
         else:
             self._ble_scan.dev_info(dev, dev_data=False, conn_retry=0)
 
+
 class BleScan:
     _log = None
 
@@ -262,14 +263,6 @@ class App:
     def main(self):
         self._log.debug('')
 
-
-        '''
-        d = btle.Peripheral('b8:27:eb:cd:1b:ee')
-        for s in d.services:
-            print(str(s))
-        return
-        '''
-    
         print('=====< Scan start >=====')
         devs = self._ble_scan.scan()
         print('=====< Scan end >=====')
@@ -308,7 +301,7 @@ BLE Device Scanner
               help='debug flag')
 def main(hci, scan_timeout, conn_svc, get_chara, read_chara, debug):
     logger = get_logger(__name__, debug)
-    logger.debug('hci=%s, scan_timeout=%s', hci, scan_timeout);
+    logger.debug('hci=%s, scan_timeout=%s', hci, scan_timeout)
     logger.debug('conn_svc=%s, get_chara=%s, read_chara=%s',
                  conn_svc, get_chara, read_chara)
 
