@@ -1,0 +1,3 @@
+[submodule "ytMQTT"]
+	path = ytMQTT
+	url = git@github.com:ytani01/ytMQTT.git
