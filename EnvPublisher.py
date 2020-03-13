@@ -3,30 +3,35 @@
 # (c) 2020 Yoichi Tanibayashi
 #
 from MmBlebc2 import MmBlebc2
-from ytBeeboote import Beebotte
+from ytBeebotte import Beebotte
 from MyLogger import get_logger
 import click
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 class App:
-    def __init__(self, uuids, user, topics, debug=False):
+    def __init__(self, uuids, user, topics,
+                 cb_t=None, cb_h=None, cb_b=None, debug=False):
         self._dbg = debug
         self._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('uuid=%s, user=%s, topic=%s',
-                        uuuid, user, topic)
+        self._log.debug('uuids=%s, user=%s, topics=%s',
+                        uuids, user, topics)
 
         self._uuids = uuids
         self._user = user
         self._topics = topics
         
         self._dev = MmBlebc2(self._uuids, 0, 0,
-                             self.cb_t, self._cb_h, self._cb_b,
+                             self.cb_t, self.cb_h, self.cb_b,
                              debug=self._dbg)
+
+        self._mqtt = Beebotte(self._topics, self._user, debug=self._dbg)
+        
 
     def main(self):
         self._log.debug('')
 
+        self._mqtt.start()
         devs = self._dev.scan()
 
         self._log.debug('done')
@@ -34,13 +39,23 @@ class App:
     def end(self):
         self._log.debug('')
 
+        self._mqtt.end()
+        
         self._log.debug('done')
 
     def cb_t(self, val):
         print(val)
 
+        val2 = float('%.2f' % val)
+        self._mqtt.send_data(self._topics[0], val2)
+        self._log.info('published: %.2f C', val2)
+
     def cb_h(self, val):
         print(val)
+
+        val2 = float('%.2f' % val)
+        self._mqtt.send_data('env1/humidity1', val2)
+        self._log.info('published: %.2f %%', val2)
 
     def cb_b(self, val):
         print(val)
@@ -51,8 +66,8 @@ Environment data publisher
 temperature, humidity ..
 ''')
 @click.argument('uuid1', type=str)
-@click.argument('user', type=str, nargs=-1)
-@click.argument('topic1', type=str, nargs=-1)
+@click.argument('user', type=str)
+@click.argument('topic1', type=str)
 @click.option('--debugg', '-d', 'debug', is_flag=True, default=False,
               help='debug option')
 def main(uuid1, user, topic1, debug):
