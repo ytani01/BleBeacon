@@ -158,9 +158,8 @@ class BleScan:
                                                    dev.rssi, dev.connectable)
         return ret
 
-    @classmethod
-    def dev_data(cls, dev, indent=4):
-        cls._log.debug('indent=%d', indent)
+    def dev_data(self, dev, indent=4):
+        self._log.debug('indent=%d', indent)
 
         indent_str = ' ' * indent
 
