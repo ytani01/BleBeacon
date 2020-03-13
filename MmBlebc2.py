@@ -54,13 +54,13 @@ class MmBlebc2(BleScan):
         Please override
         '''
         self._log.debug('val=%s', val)
-        
+
     def cb_battery(self, val):
         '''
         Please override
         '''
         self._log.debug('val=%s', val)
-        
+
     def dev_data(self, dev, indent=4):
         '''
         called from dev_info()
@@ -147,6 +147,7 @@ class App2(App):
 
     def cb_b(self, val):
         print(val)
+
 
 @click.command(context_settings=CONTEXT_SETTINGS, help='MM-BLEBC2')
 @click.argument('uuids', type=str, nargs=-1)
