@@ -7,12 +7,14 @@ MYNAME=`basename $0`
 VENV_DIR=$1
 shift
 
-echo $*
-
-if [ -n ${VIRTUAL_ENV} ]; then
-    deactivate
+if [ -z "${VIRTUAL_ENV}" ]; then
+    cd ${VENV_DIR}
+    . ./bin/activate
 fi
 
-cd ${VENV_DIR}
-. ./bin/activate
+echo $VIRTUAL_ENV
 
+cmdline=$*
+echo $cmdline
+
+exec $cmdline
