@@ -38,10 +38,9 @@ void setup() {
 
   BLEDevice::init(MY_NAME);
   //Serial.println(BLEDevice::toString().c_str());
-  
   MyAddrStr = String(BLEDevice::getAddress().toString().c_str());
   Serial.println("MyAddrStr=" + MyAddrStr);
-    
+  
   pBLEScan = BLEDevice::getScan();
   pBLEScan->setActiveScan(false); // パッシブスキャン
   //pBLEScan->setActiveScan(true); // アクティブスキャン
@@ -66,7 +65,8 @@ void loop() {
 
     Serial.print(dev.toString().c_str());
 
-    if (dev_name == DEV_NAME && dev.haveManufacturerData()) {
+#    if (dev_name == DEV_NAME && dev.haveManufacturerData()) {
+    if ( dev_name == DEV_NAME ) {
       String data = String(dev.getManufacturerData().c_str());
       Serial.print(dev_addr + ": " + data);
 
@@ -78,7 +78,7 @@ void loop() {
       }
 
       Serial.println();
-    } // for
+    } // if
   }
   
   Serial.println("LedMode=" + String(LedMode));
