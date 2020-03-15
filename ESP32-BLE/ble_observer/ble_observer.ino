@@ -6,7 +6,7 @@
 
 #define SERIAL_SPEED   115200
 #define PIN_LED        2
-#define SCAN_SEC       2
+#define SCAN_SEC       4
 #define DEEP_SLEEP_SEC 20
 #define MY_NAME        "ESP32 Observer"
 #define DEV_NAME       "ESP32"
@@ -43,8 +43,8 @@ void setup() {
   Serial.println("MyAddrStr=" + MyAddrStr);
     
   pBLEScan = BLEDevice::getScan();
-  //pBLEScan->setActiveScan(false); // パッシブスキャン
-  pBLEScan->setActiveScan(true); // アクティブスキャン
+  pBLEScan->setActiveScan(false); // パッシブスキャン
+  //pBLEScan->setActiveScan(true); // アクティブスキャン
 
   Serial.println("start...");
   digitalWrite(PIN_LED, LOW);
@@ -64,7 +64,7 @@ void loop() {
     String dev_addr = String(dev.getAddress().toString().c_str());
     String dev_name = String(dev.getName().c_str());
 
-    // Serial.print(dev.toString().c_str());
+    Serial.print(dev.toString().c_str());
 
     if (dev_name == DEV_NAME && dev.haveManufacturerData()) {
       String data = String(dev.getManufacturerData().c_str());
