@@ -108,7 +108,7 @@ class EchoService(BlenoPrimaryService):
 
 
 class BleEcho(BlePeripheral):
-    MY_NAME = 'echo'
+    MY_NAME = 'ESP32'
 
     def __init__(self, debug=False):
         self._dbg = debug

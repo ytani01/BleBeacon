@@ -13,6 +13,7 @@ import time
 import binascii
 import click
 from MyLogger import get_logger
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 class ScanDelegate(btle.DefaultDelegate):
@@ -133,6 +134,7 @@ class BleScan:
                 self._log.warning('Connection: NG .. %d/%d',
                                   count + 1, conn_svc)
                 count += 1
+
             except Exception as e:
                 self._log.warning('%s:%s', type(e).__name__, e)
                 self._log.warning('Connection: NG .. %d/%d',
@@ -289,6 +291,7 @@ class BleScan:
 
         return val
 
+
 class App:
     _log = None
 
@@ -333,8 +336,6 @@ class App:
         self._log.debug('')
         self._ble_scan.end()
 
-
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 @click.command(context_settings=CONTEXT_SETTINGS, help='''
