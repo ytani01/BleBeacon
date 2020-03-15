@@ -6,8 +6,8 @@
 
 #define SERIAL_SPEED   115200
 #define PIN_LED        2
-#define SCAN_SEC       4
-#define DEEP_SLEEP_SEC 20
+#define SCAN_SEC       10
+#define DEEP_SLEEP_SEC 10
 #define MY_NAME        "ESP32 Observer"
 #define DEV_NAME       "ESP32"
 
@@ -55,17 +55,17 @@ void setup() {
 void loop() {
   Serial.print("scanning ..");
   BLEScanResults foundDevices = pBLEScan->start(SCAN_SEC);
-  Serial.println(" done.");
   int n_devs = foundDevices.getCount();
+  Serial.println(" done. " + String(n_devs));
   
   for (int i = 0; i < n_devs; i++) {
     BLEAdvertisedDevice dev = foundDevices.getDevice(i);
     String dev_addr = String(dev.getAddress().toString().c_str());
     String dev_name = String(dev.getName().c_str());
 
-    Serial.print(dev.toString().c_str());
+    Serial.println("*" + dev_name + ':' + dev_addr);
 
-#    if (dev_name == DEV_NAME && dev.haveManufacturerData()) {
+    //    if (dev_name == DEV_NAME && dev.haveManufacturerData()) {
     if ( dev_name == DEV_NAME ) {
       String data = String(dev.getManufacturerData().c_str());
       Serial.print(dev_addr + ": " + data);
