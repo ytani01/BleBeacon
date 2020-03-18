@@ -40,13 +40,17 @@ connectのリトライは1回まで？
 ### BLE
 * [BLE Docs](https://sites.google.com/a/gclue.jp/ble-docs/advertising-1/advertising)
 
+* [bluepyで始めるBluetooth Low Energy(BLE)プログラミング](https://www.ipride.co.jp/blog/2510)
+
 * [codes for distinct appearances](https://www.bluetooth.com/wp-content/uploads/Sitecore-Media-Library/Gatt/Xml/Characteristics/org.bluetooth.characteristic.gap.appearance.xml)
+
 
 ### ESP32
 
 * [Arduino core for the ESP32](https://github.com/espressif/arduino-esp32)
 
 * [ESP32による近距離無線通信の実験（2）BLE通信](http://marchan.e5.valueserver.jp/cabin/comp/jbox/arc212/index212.html)
+
 
 ### bluepy
 
@@ -58,11 +62,11 @@ connectのリトライは1回まで？
 
 * [RPi Bluetooth LE](https://www.elinux.org/RPi_Bluetooth_LE)
 
-* [bluepyで始めるBluetooth Low Energy(BLE)プログラミング](https://www.ipride.co.jp/blog/2510)
 
 ### pybleno
 
 * [pybleno](https://github.com/Adam-Langley/pybleno)
+
 
 ### SwitchBot
 
