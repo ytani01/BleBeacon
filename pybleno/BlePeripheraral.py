@@ -39,7 +39,11 @@ class BlePeripheral:
         self._log.debug('uuids=%s', uuids)
 
         if (state == 'poweredOn'):
-            self._bleno.startAdvertising(self.MY_NAME, uuids)
+            self._log.debug('address=%s', self._bleno.address)
+            address = ':'.join(self._bleno.address.split(':')[::-1])
+            self._log.debug('address=%s', address)
+            
+            self._bleno.startAdvertising(self.MY_NAME + '-' + address, uuids)
         else:
             self._bleno.stopAdvertising()
 
@@ -109,6 +113,7 @@ class EchoService(BlenoPrimaryService):
 
 class BleEcho(BlePeripheral):
     MY_NAME = 'echo'
+    #MY_NAME = 'b8:27:eb:c3:e1:7c'
 
     def __init__(self, debug=False):
         self._dbg = debug
