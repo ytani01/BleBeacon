@@ -42,7 +42,7 @@ class App:
         self._hist_t = []
         self._hist_h = []
         self._hist_b = []
-        
+
         self._dev = MmBlebc2(self._uuids, 0, 0, self.cb, debug=self._dbg)
         self._mqtt = BeebottePublisher(self._token, debug=self._dbg)
 
@@ -51,6 +51,7 @@ class App:
 
         self._mqtt.start()
 
+        # scan forever
         devs = self._dev.scan()
         self._log.debug('devs=%s', devs)
 
