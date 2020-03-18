@@ -40,7 +40,7 @@ connectのリトライは1回まで？
 ### BLE
 * [BLE Docs](https://sites.google.com/a/gclue.jp/ble-docs/advertising-1/advertising)
 
-* [bluepyで始めるBluetooth Low Energy(BLE)プログラミング](https://www.ipride.co.jp/blog/2510)
+* [bluetooth公式(定義済UUIDなど)](https://www.bluetooth.com/specifications/gatt/services/)
 
 * [codes for distinct appearances](https://www.bluetooth.com/wp-content/uploads/Sitecore-Media-Library/Gatt/Xml/Characteristics/org.bluetooth.characteristic.gap.appearance.xml)
 
@@ -56,7 +56,7 @@ connectのリトライは1回まで？
 
 * [bluepy](https://github.com/IanHarvey/bluepy)
 
-* [bluetooth公式(定義済UUIDなど)](https://www.bluetooth.com/specifications/gatt/services/)
+* [bluepyで始めるBluetooth Low Energy(BLE)プログラミング](https://www.ipride.co.jp/blog/2510)
 
 * [Bluetoothl-Low-Energy入門講座-part1](https://www.slideshare.net/edy555/ble-deospart1)
 
