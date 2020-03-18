@@ -3,62 +3,91 @@
 # (c) 2020 Yoichi Tanibayashi
 #
 from MmBlebc2 import MmBlebc2
-from ytBeebotte import Beebotte
+from Mqtt import BeebottePublisher
 from MyLogger import get_logger
 import click
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 class App:
-    def __init__(self, uuids, user, topics,
-                 cb_t=None, cb_h=None, cb_b=None, debug=False):
+    def __init__(self, uuids, token, channel, res_t, res_h, res_b, res_msg,
+                 ave_n, debug=False):
         self._dbg = debug
         self._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('uuids=%s, user=%s, topics=%s',
-                        uuids, user, topics)
+        self._log.debug('uuids=%s, token=%s', uuids, token)
+        self._log.debug('channel=%s', channel)
+        self._log.debug('res_t=%s, res_h=%s, res_b=%s, res_msg=%s',
+                        res_t, res_h, res_b, res_msg)
+        self._log.debug('ave_n=%s', ave_n)
 
         self._uuids = uuids
-        self._user = user
-        self._topics = topics
-        
-        self._dev = MmBlebc2(self._uuids, 0, 0,
-                             self.cb_t, self.cb_h, self.cb_b,
-                             debug=self._dbg)
+        self._token = token
+        self._channel = channel
+        self._res_t = res_t
+        self._res_h = res_h
+        self._res_b = res_b
+        self._res_msg = res_msg
+        self._ave_n = ave_n
 
-        self._mqtt = Beebotte(self._topics, self._user, debug=self._dbg)
+        self._topic_t = '%s/%s' % (self._channel, self._res_t)
+        self._topic_h = '%s/%s' % (self._channel, self._res_h)
+        self._topic_b = '%s/%s' % (self._channel, self._res_b)
+        self._topic_msg = '%s/%s' % (self._channel, self._res_msg)
+
+        self._t = None
+        self._h = None
+        self._b = None
+        self._msg = None
+
+        self._hist_t = []
+        self._hist_h = []
+        self._hist_b = []
         
+        self._dev = MmBlebc2(self._uuids, 0, 0, self.cb, debug=self._dbg)
+        self._mqtt = BeebottePublisher(self._token, debug=self._dbg)
 
     def main(self):
         self._log.debug('')
 
         self._mqtt.start()
+
         devs = self._dev.scan()
+        self._log.debug('devs=%s', devs)
 
         self._log.debug('done')
 
     def end(self):
         self._log.debug('')
-
         self._mqtt.end()
-        
         self._log.debug('done')
 
-    def cb_t(self, val):
-        print(val)
+    def cb(self, t, h, b):
+        self._log.debug('%s C, %s %%, %s %%', t, h, b)
 
-        val2 = float('%.2f' % val)
-        self._mqtt.send_data(self._topics[0], val2)
-        self._log.info('published: %.2f C', val2)
+        self._hist_t.append(t)
+        while len(self._hist_t) > self._ave_n:
+            self._hist_t.pop(0)
+        t = float('%.2f' % (sum(self._hist_t) / len(self._hist_t)))
+        self._log.info('t=%s %s', t, self._hist_t)
 
-    def cb_h(self, val):
-        print(val)
+        self._hist_h.append(h)
+        while len(self._hist_h) > self._ave_n:
+            self._hist_h.pop(0)
+        h = float('%.1f' % (sum(self._hist_h) / len(self._hist_h)))
+        self._log.info('h=%s %s', h, self._hist_h)
 
-        val2 = float('%.2f' % val)
-        self._mqtt.send_data('env1/humidity1', val2)
-        self._log.info('published: %.2f %%', val2)
+        self._hist_b.append(b)
+        while len(self._hist_b) > self._ave_n:
+            self._hist_b.pop(0)
+        b = int(round(sum(self._hist_b) / len(self._hist_b)))
+        self._log.info('b=%s %s', b, self._hist_b)
 
-    def cb_b(self, val):
-        print(val)
+        msg = 'Temperature: %s C  Humidity: %s %% Battery: %s %%' % (
+            t, h, b)
+        self._mqtt.send_data(str(t), self._topic_t)
+        self._mqtt.send_data(str(h), self._topic_h)
+        self._mqtt.send_data(str(b), self._topic_b)
+        self._mqtt.send_data(msg, self._topic_msg)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS, help='''
@@ -66,15 +95,27 @@ Environment data publisher
 temperature, humidity ..
 ''')
 @click.argument('uuid1', type=str)
-@click.argument('user', type=str)
-@click.argument('topic1', type=str)
+@click.argument('token', type=str)
+@click.argument('channel', type=str)
+@click.argument('res_temperature', type=str)
+@click.argument('res_humidity', type=str)
+@click.argument('res_battery', type=str)
+@click.argument('res_msg', type=str)
+@click.option('--ave_n', '-a', 'ave_n', type=int, default=1,
+              help='average N')
 @click.option('--debugg', '-d', 'debug', is_flag=True, default=False,
               help='debug option')
-def main(uuid1, user, topic1, debug):
+def main(uuid1, token, channel,
+         res_temperature, res_humidity, res_battery, res_msg, ave_n,
+         debug):
     log = get_logger(__name__, debug)
-    log.debug('uuid1=%s, user=%s, topic1=%s', uuid1, user, topic1)
+    log.debug('uuid1=%s, token=%s, channel=%s', uuid1, token, channel)
+    log.debug('res_temperature=%s,res_humidity=%s,res_battery=%s,res_msg=%s',
+              res_temperature, res_humidity, res_battery, res_msg)
 
-    app = App([uuid1], user, [topic1], debug=debug)
+    app = App([uuid1], token, channel,
+              res_temperature, res_humidity, res_battery, res_msg,
+              ave_n, debug=debug)
     try:
         app.main()
     finally:

@@ -22,19 +22,13 @@ class MmBlebc2(BleScan):
 
     _log = None
 
-    def __init__(self, uuids=(), hci=0, scan_timeout=5,
-                 cb_temperature=None,
-                 cb_humidity=None,
-                 cb_battery=None,
-                 debug=False):
+    def __init__(self, uuids=(), hci=0, scan_timeout=5, cb=None, debug=False):
         self._dbg = debug
         __class__._log = get_logger(__class__.__name__, self._dbg)
         self._log.debug('uuids=%s, hci=%s, scan_timeout=%s',
                         uuids, hci, scan_timeout)
 
-        self._cb_temperature = cb_temperature
-        self._cb_humidity = cb_humidity
-        self._cb_battery = cb_battery
+        self._cb = cb
 
         super().__init__(uuids, hci, scan_timeout,
                          conn_svc=0, get_chara=0, read_chara=0,
@@ -43,23 +37,11 @@ class MmBlebc2(BleScan):
         self._delegate = MmBleBc2ScanDelegate(self, debug=self._dbg)
         self._scanner = btle.Scanner(self._hci).withDelegate(self._delegate)
 
-    def cb_temperature(self, val):
+    def cb(self, t, h, b):
         '''
         Please override
         '''
-        self._log.debug('val=%s', val)
-
-    def cb_humidity(self, val):
-        '''
-        Please override
-        '''
-        self._log.debug('val=%s', val)
-
-    def cb_battery(self, val):
-        '''
-        Please override
-        '''
-        self._log.debug('val=%s', val)
+        self._log.debug('t=%s, h=%s, b=%', t, h, b)
 
     def dev_data(self, dev, indent=4):
         '''
@@ -97,9 +79,7 @@ class MmBlebc2(BleScan):
         print('temperature: %.1f \'C ' % (data_temperature), end='')
         print('humidity: %.1f %%' % (data_humidity))
 
-        self._cb_battery(data_battery)
-        self._cb_temperature(data_temperature)
-        self._cb_humidity(data_humidity)
+        self._cb(data_temperature, data_humidity, data_battery)
 
         return [data_battery, data_temperature, data_humidity]
 
@@ -136,17 +116,11 @@ class App2(App):
         self._read_chara = 0
 
         self._ble_scan = MmBlebc2(self._uuids, self._hci, self._scan_timeout,
-                                  self.cb_t, self.cb_h, self.cb_b,
+                                  self.cb,
                                   debug=self._dbg)
 
-    def cb_t(self, val):
-        print(val)
-
-    def cb_h(self, val):
-        print(val)
-
-    def cb_b(self, val):
-        print(val)
+    def cb(self, t, h, b):
+        print('%s C, %s, %%, %s %%' % (t, h, b))
 
 
 @click.command(context_settings=CONTEXT_SETTINGS, help='MM-BLEBC2')
