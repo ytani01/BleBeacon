@@ -11,6 +11,7 @@ __date__   = '2020'
 from bluepy import btle
 import time
 import binascii
+import sys
 import click
 from MyLogger import get_logger
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -41,14 +42,11 @@ class ScanDelegate(btle.DefaultDelegate):
             if len(self._uuids) == 0 or dev.addr in self._uuids:
                 self._ble_scan.devs.append(dev)
 
-        # print(self._ble_scan.dev2string(dev))
-        # self._ble_scan.dev_info(dev, conn_retry=5, get_chara=5, read_chara=5)
         if target and isNewData and self._ble_scan.scan_timeout == 0:
-            print('')
-            print('%s ' % (newflag), end='')
+            self._log.debug('newflag=%s', newflag)
             self._ble_scan.dev_info(dev, conn_svc=self._ble_scan._conn_svc)
         elif self._ble_scan.scan_timeout != 0:
-            print('%s ' % (newflag), end='')
+            self._log.debug('newflag=%s', newflag)
             self._ble_scan.dev_info(dev, dev_data=False, conn_svc=0)
 
 
@@ -106,7 +104,7 @@ class BleScan:
             read_chara = self._read_chara
             self._log.debug('read_chara=%s', read_chara)
 
-        print(self.dev2string(dev))
+        self._log.debug('%s', self.dev2string(dev))
 
         if dev_data:
             self.dev_data(dev, indent=4)
@@ -166,10 +164,9 @@ class BleScan:
         indent_str = ' ' * indent
 
         for (adtype, desc, val) in dev.getScanData():
-            # print('%s%3d:%s: "%s"' % (indent_str, adtype, desc, val))
-            print('%s%s: "%s"' % (indent_str, desc, val))
+            self._log.debug('%s%s: "%s"', indent_str, desc, val)
         if not dev.scanData:
-            print('%s(no data)' % (indent_str))
+            self._log.debug('%s(no data)', indent_str)
 
     def dump_svc(self, peri, get_chara=None, read_chara=None, indent=2):
         self._log.debug('read_chara=%s, indent=%d', read_chara, indent)
@@ -186,9 +183,7 @@ class BleScan:
 
         svcs = sorted(peri.services, key=lambda s: s.hndStart)
         for s in svcs:
-            # print('%s%3d:Service[%s]' % (indent_str, i, s.uuid))
-            print(indent_str, end='')
-            print('Service [%s]' % (s.uuid))
+            self._log.debug('%sService [%s]', indent_str, s.uuid)
             ret = self.dump_chara(s, get_chara, read_chara, indent=indent+2)
             self._log.debug('dump_chara()> %s', ret)
 
@@ -226,14 +221,13 @@ class BleScan:
                 count += 1
 
         if count >= 0:  # failed
-            print('%s(getCharacteristics: failed)' % (indent_str))
+            self._log.warning('%s(getCharacteristics: failed)', indent_str)
             raise RuntimeError('getCharacteristics: failed')
 
         for c in chara:
-            # print('%s%3d:%s' % (indent_str, i, c))
-            print('%s%s' % (indent_str, c))
-            print('%s  Properties: %s' %
-                  (indent_str, c.propertiesToString()))
+            self._log.debug('%s%s', indent_str, c)
+            self._log.debug('%s  Properties: %s',
+                            indent_str, c.propertiesToString())
 
             if c.supportsRead():
                 ret = self.chara_read(c, read_chara=read_chara,
@@ -269,7 +263,7 @@ class BleScan:
                 count += 1
 
         if count >= 0:  # read failed
-            print('%s(read: failed)', indent_str)
+            self._log.warning('%s(read: failed)', indent_str)
             raise RuntimeError('read: failed')
 
         val_str1 = ''
@@ -285,9 +279,9 @@ class BleScan:
             val_str2 = ' '.join([s[i:i+2] for i in range(0, len(s), 2)])
             val_str2 = '<' + val_str2 + '>'
 
-        print('%sValue: %s' % (indent_str, val_str1))
+        self._log.debug('%sValue: %s', indent_str, val_str1)
         if val_str2 != '':
-            print('%s       %s' % (indent_str, val_str2))
+            self._log.debug('%s      %s', indent_str, val_str2)
 
         return val
 

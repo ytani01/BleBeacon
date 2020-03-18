@@ -72,12 +72,12 @@ class MmBlebc2(BleScan):
         data_battery = self.buttery_level(data2[4])
         data_temperature = self.hexstr2float(''.join(data2[5:7]))
         data_humidity = self.hexstr2float(''.join(data2[7:9]))
-        print(' ' * indent, end='')
-        print('----------')
-        print(' ' * indent, end='')
-        print('battery: %d %% ' % (data_battery), end='')
-        print('temperature: %.1f \'C ' % (data_temperature), end='')
-        print('humidity: %.1f %%' % (data_humidity))
+
+        self._log.debug('%s----------', ' ' * indent)
+        self._log.debug('%sbattery: %d %%', ' ' * indent, data_battery)
+        self._log.debug('%stemperature: %.2f C', ' ' * indent,
+                        data_temperature)
+        self._log.debug('%shumidity: %.1 %%', ' ' * indent, data_humidity)
 
         self._cb(data_temperature, data_humidity, data_battery)
 

@@ -26,6 +26,18 @@
 # Don't use PWM pins(12, 13, 18)
 #@reboot		sleep 2; pigs m 12 0 m 13 0 m 18 5
 
+BINDIR=/home/pi/bin
+LOGDIR=/home/pi/tmp
+
+ACT_DO=/home/pi/bin/activate-do.sh
+VENVDIR=/home/pi/env2-ble
+PUB=/home/pi/env2-ble/BleBeacon/MmBlebc2Publisher.py
+PUB_OPT="-a 4"
+MACADDR=ac:23:3f:a0:08:ed
+TOKEN=token_VK8GQpDPFfDxZPGC
+CH=env1
+RES="temperature1 humidity1 battery1 msg1"
+
 @reboot			${HOME}/bin/boot.sh > ${HOME}/tmp/boot.log 2>&1 &
-@reboot	sleep 10; ${HOME}/bin/active-do.sh /home/pi/env2-ble /home/pi/bin/EnvPublisher.py ac:23:3f:a0:08:ed token_VK8GQpDPFfDxZPGC env1/temperature1 > ${HOME}/tmp/env.log 2>&1 &
+@reboot	sleep 10; ${ACT_DO} ${VENVDIR} ${PUB} ${PUB_OPT} ${MACADDR} ${TOKEN} ${CH} ${RES} > ${LOGDIR}/env.log 2>&1 &
 */10 * * * *		${HOME}/bin/boot.sh >> ${HOME}/tmp/boot.log 2>&1 &
