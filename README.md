@@ -52,6 +52,10 @@ connectのリトライは1回まで？
 
 * [bluepy](https://github.com/IanHarvey/bluepy)
 
+* [bluetooth公式(定義済UUIDなど)](https://www.bluetooth.com/specifications/gatt/services/)
+
+* [Bluetoothl-Low-Energy入門講座-part1](https://www.slideshare.net/edy555/ble-deospart1)
+
 * [RPi Bluetooth LE](https://www.elinux.org/RPi_Bluetooth_LE)
 
 * [bluepyで始めるBluetooth Low Energy(BLE)プログラミング](https://www.ipride.co.jp/blog/2510)
