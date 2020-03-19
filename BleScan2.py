@@ -104,7 +104,32 @@ class App:
         target_addr = []
         for d in devs:
             self._log.debug('[%s]', d.addr)
-            
+            if len(d.rawData) > 0:
+                self._log.debug('rawData=')
+                self._log.debug('%s',
+                                ['%02x' % c for c in d.rawData])
+
+                part = 'len'
+                data = []
+                l_ = 0
+                i_ = 0
+                for c in d.rawData:
+                    if part == 'len':
+                        l_ = int(c)
+                        i_ = 0
+                        data.append('%02x(%d)' % (c, l_))
+                        part = 'data'
+                        continue
+
+                    data.append('%02x' % c)
+                    i_ += 1
+                    if i_ == l_:
+                        self._log.debug('data=%s', data)
+                        part = 'len'
+                        data = []
+                        l_ = 0
+                        i_ = 0
+                        
             if d.addr in self._addrs:
                 target_addr.append(d.addr)
                 continue
@@ -112,6 +137,7 @@ class App:
             name = None
 
             for (adtype, desc, val) in d.getScanData():
+                self._log.debug('desc=%s, val=%s', desc, val)
                 if 'Local Name' in desc:
                     name = val
                     self._log.debug('name=%s', val)
