@@ -45,7 +45,7 @@ class BlePeripheral:
         self._log.debug('state=%s', state)
 
         uuids = [u.UUID for u in self._svcs]
-        self._log.debug('uuids=%s', uuids)
+        self._log.debug('service uuids=%s', uuids)
 
         if (state == 'poweredOn'):
             # reverse MAC address
