@@ -118,7 +118,7 @@ class BleCharacteristic(Characteristic):
             'value': None
         })
 
-        self._value = ''
+        self._value = bytearray(''.encode('utf-8'))
         self._updateValueCallback = None
 
     def onReadRequest(self, offset, callback):
