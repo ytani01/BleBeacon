@@ -27,6 +27,10 @@ class BlePeripheral:
         self._bleno = Bleno()
         self._bleno.on('stateChange', self.onStateChange)
         self._bleno.on('advertisingStart', self.onAdvertisingStart)
+        self._bleno.on('servicesSet', self.onServicesSet)
+        self._bleno.on('accept', self.onAccept)
+        self._bleno.on('disconnect', self.onDisconnect)
+        self._bleno.on('rssiUpdate', self.onRssiUpdate)
 
         self._address = None
         self._log.debug('_address=%s', self._address)
@@ -64,8 +68,20 @@ class BlePeripheral:
         self._log.debug('error=%s', error)
 
         if not error:
+            self._log.debug('setService:%s', [s.uuid for s in self._svcs])
             self._bleno.setServices(self._svcs)
 
+    def onServicesSet(self, error):
+        self._log.debug('error=%s', error)
+
+    def onAccept(self, client):
+        self._log.debug('client=%s', client)
+
+    def onDisconnect(self, client):
+        self._log.debug('client=%s', client)
+
+    def onRssiUpdate(self, rssi):
+        self._log.debug('rssi=%s')
 
 class BleService(BlenoPrimaryService):
     _log = get_logger(__name__, False)
@@ -74,13 +90,14 @@ class BleService(BlenoPrimaryService):
         self._dbg = debug
         __class__._log = get_logger(__class__.__name__, self._dbg)
         self._log.debug('uuid=%s', uuid)
+        self._log.debug('charas=%s', [ c._uuid for c in charas])
 
         self._uuid = uuid
         self._charas = charas
 
         super().__init__({
             'uuid': self._uuid,
-            'characteristic': self._charas
+            'characteristics': self._charas
         })
 
 
@@ -106,24 +123,28 @@ class BleCharacteristic(Characteristic):
 
     def onReadRequest(self, offset, callback):
         self._log.debug('offset=%s', offset)
-        self._log.debug('_value=%s', self._value)
+        self._log.debug('_value=%a', self._value)
 
-        callback(Characteristic.RESULT_SUCCESS, self._value[offset:])
+        ret = self._value[offset:]
+        self._log.info('ret=%a', ret)
+
+        callback(Characteristic.RESULT_SUCCESS, ret)
 
     def onWriteRequest(self, data, offset, withoutResponse, callback):
         self._log.debug('data=%s, offset=%s', data, offset)
 
         self._value = data[offset:]
-        self._log.debug('_value=%s', self._value)
+        self._log.info('_value=%s', self._value)
 
         if self._updateValueCallback:
-            self._log.info('notifying')
+            self._log.info('notifying: %s ..', self._value)
             self._updateValueCallback(self._value)
 
         callback(Characteristic.RESULT_SUCCESS)
 
     def onSubscribe(self, maxValueSize, updateValueCallback):
         self._log.debug('maxValueSize=%s', maxValueSize)
+        self._log.debug('updateValueCallback=%s', updateValueCallback)
         self._updateValueCallback = updateValueCallback
 
     def onUnsubscribe(self):
