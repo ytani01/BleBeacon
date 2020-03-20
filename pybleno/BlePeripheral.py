@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 #
+# (c) 2020 Yoichi Tanibayashi
+#
 # usage:
-#   sudo ./BlePeripheraral.py -d
+#   sudo ./BlePeripheraral.py myname -d
 #
 
 from pybleno import Bleno, BlenoPrimaryService, Characteristic
@@ -12,16 +14,22 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 class BlePeripheral:
-    def __init__(self, svcs=[], debug=False):
-        self._dbg = debug
-        self._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('')
+    _log = get_logger(__name__, False)
 
+    def __init__(self, name, svcs=[], debug=False):
+        self._dbg = debug
+        __class__._log = get_logger(__class__.__name__, self._dbg)
+        self._log.debug('name=%s', name)
+
+        self._name = name
         self._svcs = svcs
 
         self._bleno = Bleno()
         self._bleno.on('stateChange', self.onStateChange)
         self._bleno.on('advertisingStart', self.onAdvertisingStart)
+
+        self._address = None
+        self._log.debug('_address=%s', self._address)
 
     def start(self):
         self._log.debug('')
@@ -31,6 +39,7 @@ class BlePeripheral:
         self._log.debug('')
         self._bleno.stopAdvertising()
         self._bleno.disconnect()
+        self._log.debug('done')
 
     def onStateChange(self, state):
         self._log.debug('state=%s', state)
@@ -39,12 +48,16 @@ class BlePeripheral:
         self._log.debug('uuids=%s', uuids)
 
         if (state == 'poweredOn'):
-            self._log.debug('address=%s', self._bleno.address)
-            address = ':'.join(self._bleno.address.split(':')[::-1])
-            self._log.debug('address=%s', address)
+            # reverse MAC address
+            self._address = ':'.join(
+                self._bleno.address.split(':')[::-1]
+            )
+            self._log.debug('_address=%s', self._address)
 
-            self._bleno.startAdvertising(self.MY_NAME + '-' + address, uuids)
+            self._log.info('start Advertising(%s) ..', self._name)
+            self._bleno.startAdvertising(self._name, uuids)
         else:
+            self._log.info('stop Advertising ..')
             self._bleno.stopAdvertising()
 
     def onAdvertisingStart(self, error):
@@ -54,17 +67,37 @@ class BlePeripheral:
             self._bleno.setServices(self._svcs)
 
 
-class EchoCharacteristic(Characteristic):
-    UUID = 'ec0F'
+class BleService(BlenoPrimaryService):
+    _log = get_logger(__name__, False)
 
-    def __init__(self, debug=False):
+    def __init__(self, uuid, charas=[], debug=False):
         self._dbg = debug
-        self._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('')
+        __class__._log = get_logger(__class__.__name__, self._dbg)
+        self._log.debug('uuid=%s', uuid)
+
+        self._uuid = uuid
+        self._charas = charas
 
         super().__init__({
-            'uuid': self.UUID,
-            'properties': ['read', 'write', 'notify'],
+            'uuid': self._uuid,
+            'characteristic': self._charas
+        })
+
+
+class BleCharacteristic(Characteristic):
+    _log = get_logger(__name__, False)
+
+    def __init__(self, uuid, properties=[], debug=False):
+        self._dbg = debug
+        __class__._log = get_logger(__class__.__name__, self._dbg)
+        self._log.debug('uuid=%s, properties=%s', uuid, properties)
+
+        self._uuid = uuid
+        self._properties = properties
+
+        super().__init__({
+            'uuid': self._uuid,
+            'properties': self._properties,
             'value': None
         })
 
@@ -90,7 +123,6 @@ class EchoCharacteristic(Characteristic):
         callback(Characteristic.RESULT_SUCCESS)
 
     def onSubscribe(self, maxValueSize, updateValueCallback):
-        print('onSubscribe')
         self._log.debug('maxValueSize=%s', maxValueSize)
         self._updateValueCallback = updateValueCallback
 
@@ -99,61 +131,40 @@ class EchoCharacteristic(Characteristic):
         self._updateValueCallback = None
 
 
-class EchoService(BlenoPrimaryService):
-    UUID = 'ec00'
+class BlePeripheralApp:
+    _log = get_logger(__name__, False)
 
-    def __init__(self, charas=[], debug=False):
+    def __init__(self, name, debug=False):
         self._dbg = debug
         self._log = get_logger(__class__.__name__, self._dbg)
-        # self._log.debug('charas=%s', charas)
-        self._log.debug('')
+        self._log.debug('name=%s', name)
 
-        super().__init__({'uuid': self.UUID, 'characteristics': charas})
+        self._name = name
 
-
-class BleEcho(BlePeripheral):
-    MY_NAME = 'echo'
-    #MY_NAME = 'b8:27:eb:c3:e1:7c'
-
-    def __init__(self, debug=False):
-        self._dbg = debug
-        self._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('')
-
-        self._chara1 = EchoCharacteristic(debug=self._dbg)
-        self._svc1 = EchoService([self._chara1], debug=self._dbg)
-
-        super().__init__([self._svc1], debug=self._dbg)
-
-
-class App:
-    def __init__(self, debug=False):
-        self._dbg = debug
-        self._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('')
-
-        self._ble_echo = BleEcho(debug=self._dbg)
+        self._ble = BlePeripheral(self._name, debug=self._dbg)
 
     def main(self):
         self._log.debug('')
 
-        self._ble_echo.start()
+        self._ble.start()
 
         while True:
             time.sleep(10)
 
     def end(self):
         self._log.debug('')
-        self._ble_echo.end()
+        self._ble.end()
+        self._log.debug('done')
 
 
 @click.command(context_settings=CONTEXT_SETTINGS, help='')
+@click.argument('name', type=str)
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug flag')
-def main(debug):
+def main(name, debug):
     log = get_logger(__name__, debug)
 
-    app = App(debug=debug)
+    app = BlePeripheralApp(name, debug=debug)
     try:
         app.main()
     finally:
