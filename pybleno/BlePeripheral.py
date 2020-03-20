@@ -131,7 +131,8 @@ class BleCharacteristic(Characteristic):
         callback(Characteristic.RESULT_SUCCESS, ret)
 
     def onWriteRequest(self, data, offset, withoutResponse, callback):
-        self._log.debug('data=%s, offset=%s', data, offset)
+        self._log.debug('data=%s, offset=%s, withoutResponse=%s',
+                        data, offset, withoutResponse)
 
         self._value = data[offset:]
         self._log.info('_value=%s', self._value)
