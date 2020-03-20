@@ -40,6 +40,7 @@ class BlePeripheral:
 
         if (state == 'poweredOn'):
             self._bleno.startAdvertising(self.MY_NAME, uuids)
+            # self._bleno.startAdvertisingIBeacon(self.MY_NAME)
         else:
             self._bleno.stopAdvertising()
 
