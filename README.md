@@ -34,6 +34,20 @@ connectのリトライは1回まで？
 * 以上の処理をしても失敗することがある。
 
 
+## pyblenoの罠
+
+* ``Bleno.startAdvertising(name, uuids)``のnameは、
+<Shortened local name>(0x08)。
+<Complete local name>(0x09)には、何も入らない。
+
+* ``ManufacturerData``を設定する関数がない。
+
+## ESP32 BLEの罠
+
+* ``BLEAdvertisedDevice``の``getName()``は、
+<Complete local name>(0x09)。
+<Shortened local name>(0x08)は取得できない。
+
 
 ## Reference
 
