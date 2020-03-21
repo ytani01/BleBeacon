@@ -6,7 +6,7 @@
 
 #define SERIAL_SPEED   115200
 #define PIN_LED        2
-#define SCAN_SEC       10
+#define SCAN_SEC       15
 #define DEEP_SLEEP_SEC 10
 #define MY_NAME        "ESP32 Observer"
 #define DEV_NAME       "ESP32"
@@ -25,6 +25,9 @@ String   MyAddrStr;
 
 #define ALL_STR "all"
 
+#define TAG_PREFIX "tag-"
+String TargetName;
+
 //
 // setup
 //
@@ -42,11 +45,14 @@ void setup() {
   Serial.println("MyAddrStr=" + MyAddrStr);
   
   pBLEScan = BLEDevice::getScan();
-  pBLEScan->setActiveScan(false); // パッシブスキャン
-  //pBLEScan->setActiveScan(true); // アクティブスキャン
+  //pBLEScan->setActiveScan(false); // パッシブスキャン
+  pBLEScan->setActiveScan(true); // アクティブスキャン
 
   Serial.println("start...");
   digitalWrite(PIN_LED, LOW);
+
+  TargetName = TAG_PREFIX + MyAddrStr;
+  Serial.println("TargetName=" + TargetName);
 }
 
 //
@@ -63,23 +69,17 @@ void loop() {
     String dev_addr = String(dev.getAddress().toString().c_str());
     String dev_name = String(dev.getName().c_str());
 
-    Serial.println("*" + dev_name + ':' + dev_addr);
+    Serial.print("*" + dev_name + ':' + dev_addr);
 
-    //    if (dev_name == DEV_NAME && dev.haveManufacturerData()) {
-    if ( dev_name == DEV_NAME ) {
-      String data = String(dev.getManufacturerData().c_str());
-      Serial.print(dev_addr + ": " + data);
+    if ( dev_name == TargetName ) {
+      Serial.print(" !!");
+      LedMode = LED_MODE_ON;
+    } else {
+      Serial.print(" NG");
+    }
 
-      if (data == ALL_STR || data == MyAddrStr) {
-        Serial.print(" !!");
-        LedMode = LED_MODE_ON;
-      } else {
-        Serial.print(" NG");
-      }
-
-      Serial.println();
-    } // if
-  }
+    Serial.println();
+  } // for
   
   Serial.println("LedMode=" + String(LedMode));
   if (LedMode == LED_MODE_ON) {		// LED_MODE_ON
