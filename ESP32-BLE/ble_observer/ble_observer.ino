@@ -94,8 +94,10 @@ void loop() {
     delay(ON_MSEC);
     Serial.println("deep sleep " + String(DEEP_SLEEP_MSEC_ON) + " msec ..");
     esp_deep_sleep(DEEP_SLEEP_MSEC_ON * 1000LL);
+
     // digitalWrite(PIN_LED, LOW);
-    LedMode = LED_MODE_OFF;
+    //LedMode = LED_MODE_OFF;
+
   } else {				// LED_MODE_OFF
     digitalWrite(PIN_LED, LOW);
     CountOff++;
