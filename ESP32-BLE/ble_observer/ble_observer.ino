@@ -46,8 +46,8 @@ void setup() {
   Serial.println("MyAddrStr=" + MyAddrStr);
   
   pBLEScan = BLEDevice::getScan();
-  //pBLEScan->setActiveScan(false); // パッシブスキャン
-  pBLEScan->setActiveScan(true); // アクティブスキャン
+  pBLEScan->setActiveScan(false); // パッシブスキャン
+  //pBLEScan->setActiveScan(true); // アクティブスキャン
 
   Serial.println("start...");
   digitalWrite(PIN_LED, LOW);
@@ -85,6 +85,16 @@ void loop() {
     }
 
     Serial.println();
+
+    if (dev.haveServiceData()) {
+      String svc_data = String(dev.getServiceData().c_str());
+      Serial.println("  svc_data=" + svc_data);
+    }
+
+    if (dev.haveServiceUUID()) {
+      BLEUUID svc_uuid = dev.getServiceDataUUID();
+      Serial.println("  svc_uuid=" + String(svc_uuid.toString().c_str()));
+    }
   } // for
   
   Serial.println("LedMode=" + String(LedMode));
