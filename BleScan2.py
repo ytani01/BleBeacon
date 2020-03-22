@@ -67,7 +67,7 @@ class BleScan:
             scan_timeout = self._scan_timeout
             self._log.debug('scan_timeout=%s', scan_timeout)
 
-        devs = self._scanner.scan(scan_timeout, passive=False)
+        devs = self._scanner.scan(scan_timeout, passive=True)
         return devs
 
 
@@ -79,7 +79,7 @@ class App:
                  debug=False):
         self._dbg = debug
         __class__._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('')
+        self._log.debug('addrs=%s')
 
         self._addrs = addrs
         self._hci = hci
@@ -130,10 +130,6 @@ class App:
                         l_ = 0
                         i_ = 0
                         
-            if d.addr in self._addrs:
-                target_addr.append(d.addr)
-                continue
-
             name = None
 
             for (adtype, desc, val) in d.getScanData():
@@ -142,9 +138,13 @@ class App:
                     name = val
                     self._log.debug('name=%s', val)
 
+            if d.addr in self._addrs:
+                target_addr.append(d.addr)
+            else:
+                continue
+
             if name in self._addrs:
                 target_addr.append(d.addr)
-                continue
 
             if not d.connectable:
                 continue
