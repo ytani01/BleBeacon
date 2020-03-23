@@ -22,12 +22,18 @@ quit
 * 様々なBLE関連ライブラリがあるが、どれもBLEのフルスペックを実装しておらず、
 相互通信に支障を来すことがある。
 
+ex. 
+``pybleno``でAdvertiseして、
+ESP32でスキャンすると、
+名前(Local Name)を取得できない。
+
 
 ## bluepyの罠
 
 * scanの間隔が難しい：短すぎると見つからない。長すぎるとエラー。(5～10秒？)
 
-* scan中に(handleDiscoveryで)、詳細情報を取得しようとすると、
+* scan中に(handleDiscoveryで)、
+(サービスやキャラクタリスティックの)情報を取得しようとすると、
 scanがエラー終了することがある。
 connectのリトライは1回まで？
 
@@ -43,16 +49,23 @@ connectのリトライは1回まで？
 ## pyblenoの罠
 
 * ``Bleno.startAdvertising(name, uuids)``のnameは、
-<Shortened local name>(0x08)。
-<Complete local name>(0x09)には、何も入らない。
+``Shortened local name``(0x08)。
+``Complete local name``(0x09)を設定することはできない。
 
 * ``ManufacturerData``を設定する関数がない。
+自分で、``Advertisement Data``と``Scan Data``を作成し、
+startAdvertisingWithEIRData()を呼ぶ必要がある。
+
+* javascriptの blenoをPythonに移植したものだが、直訳したソースコードで、
+Pythonのコードとしては非常に読みづらく、無駄も多い。
+(PDUを作成する部分など、bytearrayにして欲しい...)
+
 
 ## ESP32 BLEの罠
 
 * ``BLEAdvertisedDevice``の``getName()``は、
-<Complete local name>(0x09)。
-<Shortened local name>(0x08)は取得できない。
+``Complete local name``(0x09)。
+``Shortened local name``(0x08)は取得できない。
 
 
 ## Reference
