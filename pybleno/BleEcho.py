@@ -22,13 +22,13 @@ class BleEcho(BlePeripheral):
         self._name = name
 
         self._chara1 = EchoCharacteristic(debug=self._dbg)
-        self._svc1 = EchoService(charas=[self._chara1],
-                                 debug=self._dbg)
+        self._svc1 = EchoService(charas=[self._chara1], debug=self._dbg)
 
         super().__init__(self._name, [self._svc1], debug=self._dbg)
 
 
 class EchoService(BleService):
+    # UUID = '0000ec00-0000-1000-8000-00805f9b34fb'
     UUID = 'ec00'
 
     _log = get_logger(__name__, False)
@@ -51,8 +51,7 @@ class EchoCharacteristic(BleCharacteristic):
         __class__._log = get_logger(__class__.__name__, self._dbg)
         self._log.debug('uuid=%s', uuid)
 
-        super().__init__(uuid, ['read', 'write', 'notify'],
-                         debug=debug)
+        super().__init__(uuid, ['read', 'write', 'notify'], debug=self._dbg)
 
 
 class BleEchoApp(BlePeripheralApp):

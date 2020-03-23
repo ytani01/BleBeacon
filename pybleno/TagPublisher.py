@@ -3,13 +3,15 @@
 # (c) 2020 Yoichi Tanibayashi
 #
 from BlePeripheral import BlePeripheral, BlePeripheralApp
+from BlePeripheral import BleService, BleCharacteristic
 from MyLogger import get_logger
 import click
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 class TagPublisher(BlePeripheral):
-    TAGID_PREFIX = 'tag-'
+    MYNAME='Yt'
+    TAGID_PREFIX = 'T'
 
     _log = get_logger(__name__, False)
 
@@ -20,10 +22,40 @@ class TagPublisher(BlePeripheral):
 
         self._tagid = tagid
 
-        self._myname = self.TAGID_PREFIX + self._tagid
-        self._svcs = []
+        self._myname = self.MYNAME
+        self._chara1 = TagCharacteristic(debug=self._dbg)
+        self._svc1 = TagService(charas=[self._chara1], debug=self._dbg)
+        self._ms_data = (self.TAGID_PREFIX + self._tagid).encode('utf-8')
+        self._log.debug('_ms_data=%a', self._ms_data)
 
-        super().__init__(self._myname, self._svcs, debug=self._dbg)
+        super().__init__(self._myname, [self._svc1], self._ms_data,
+                         debug=self._dbg)
+
+
+class TagService(BleService):
+    UUID = 'ec00'
+
+    _log = get_logger(__name__, False)
+
+    def __init__(self, uuid=UUID, charas=[], debug=False):
+        self._dbg = debug
+        __class__._log = get_logger(__class__.__name__, self._dbg)
+        self._log.debug('uuid=%s', uuid)
+
+        super().__init__(uuid, charas, debug=self._dbg)
+
+
+class TagCharacteristic(BleCharacteristic):
+    UUID = 'ec0F'
+
+    _log = get_logger(__name__, False)
+
+    def __init__(self, uuid=UUID, debug=False):
+        self._dbg = debug
+        __class__._log = get_logger(__class__.__name__, self._dbg)
+        self._log.debug('uuid=%s', uuid)
+
+        super().__init__(uuid, ['read', 'write', 'notify'], debug=self._dbg)
 
 
 class TagPublisherApp(BlePeripheralApp):
