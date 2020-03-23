@@ -8,7 +8,7 @@
 #define PIN_LED        2
 #define SCAN_SEC       2
 #define DEEP_SLEEP_MSEC_OFF 10000
-#define DEEP_SLEEP_MSEC_ON 200
+#define DEEP_SLEEP_MSEC_ON 100
 #define MY_NAME        "ESP32 Observer"
 #define DEV_NAME       "ESP32"
 
@@ -16,7 +16,7 @@
 #define LED_MODE_ON    1
 #define LED_MODE_BLINK 2
 int     LedMode = LED_MODE_OFF;
-#define ON_MSEC        2000
+#define ON_MSEC        1500
 
 #define COUNTOFF_MAX 2
 int     CountOff = 0;
@@ -26,7 +26,7 @@ String   MyAddrStr;
 
 #define ALL_STR "all"
 
-#define TAG_PREFIX "tag-"
+#define TAG_PREFIX "Tg"
 String TargetName;
 
 //
@@ -69,14 +69,14 @@ void loop() {
     BLEAdvertisedDevice dev = foundDevices.getDevice(i);
     String dev_addr = String(dev.getAddress().toString().c_str());
     String dev_name = String(dev.getName().c_str());
-    String manu_data = "";
+    String ms_data = "";
 
     if (dev.haveManufacturerData()) {
-      manu_data = String(dev.getManufacturerData().c_str());
+      ms_data = String(dev.getManufacturerData().c_str());
     }
-    Serial.print("*" + dev_name + ':' + dev_addr + ':');
+    Serial.print("*" + dev_name + ':' + dev_addr + ' ' + ms_data);
 
-    if (dev_name == TargetName || manu_data == TargetName) {
+    if (dev_name == TargetName || ms_data == TargetName) {
       Serial.println(" !!");
       LedMode = LED_MODE_ON;
       break;
