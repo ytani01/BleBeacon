@@ -5,10 +5,10 @@
 #include <Wire.h>                   // I2C interface
 
 #define SERIAL_SPEED   115200
-#define PIN_LED        2
-#define SCAN_SEC       2
-#define DEEP_SLEEP_MSEC_OFF 10000
-#define DEEP_SLEEP_MSEC_ON 100
+#define PIN_LED        2  // GPIO pin
+#define SCAN_SEC       1  // sec
+#define DEEP_SLEEP_MSEC_OFF 10000  // ms
+#define DEEP_SLEEP_MSEC_ON 100     // ms
 #define MY_NAME        "ESP32 Observer"
 #define DEV_NAME       "ESP32"
 
@@ -16,7 +16,7 @@
 #define LED_MODE_ON    1
 #define LED_MODE_BLINK 2
 int     LedMode = LED_MODE_OFF;
-#define ON_MSEC        1500
+#define ON_MSEC        1000
 
 #define COUNTOFF_MAX 2
 int     CountOff = 0;
@@ -26,7 +26,9 @@ String   MyAddrStr;
 
 #define ALL_STR "all"
 
-#define TAG_PREFIX "Tg"
+#define PUB_NAME "Yt"
+
+#define TAG_PREFIX "T"
 String TargetName;
 
 //
@@ -76,7 +78,7 @@ void loop() {
     }
     Serial.print("*" + dev_name + ':' + dev_addr + ' ' + ms_data);
 
-    if (dev_name == TargetName || ms_data == TargetName) {
+    if (dev_name == PUB_NAME && ms_data == TargetName) {
       Serial.println(" !!");
       LedMode = LED_MODE_ON;
       break;
