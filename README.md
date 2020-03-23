@@ -68,6 +68,7 @@ Pythonのコードとしては非常に読みづらく、無駄も多い。
 ``Shortened local name``(0x08)は取得できない。
 
 
+
 ## Reference
 
 ### BLE
