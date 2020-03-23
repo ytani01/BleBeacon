@@ -22,15 +22,15 @@ class MmBlebc2(BleScan):
 
     _log = None
 
-    def __init__(self, uuids=(), hci=0, scan_timeout=5, cb=None, debug=False):
+    def __init__(self, addrs=(), hci=0, scan_timeout=5, cb=None, debug=False):
         self._dbg = debug
         __class__._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('uuids=%s, hci=%s, scan_timeout=%s',
-                        uuids, hci, scan_timeout)
+        self._log.debug('addrs=%s, hci=%s, scan_timeout=%s',
+                        addrs, hci, scan_timeout)
 
         self._cb = cb
 
-        super().__init__(uuids, hci, scan_timeout,
+        super().__init__(addrs, hci, scan_timeout,
                          conn_svc=0, get_chara=0, read_chara=0,
                          debug=self._dbg)
 
@@ -102,40 +102,40 @@ class MmBlebc2(BleScan):
 class App2(App):
     _log = None
 
-    def __init__(self, uuids=(), hci=0, scan_timeout=5, debug=False):
+    def __init__(self, addrs=(), hci=0, scan_timeout=5, debug=False):
         self._dbg = debug
         __class__._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('uuids=%s, hci=%s, scan_timeout=%s',
-                        uuids, hci, scan_timeout)
+        self._log.debug('addrs=%s, hci=%s, scan_timeout=%s',
+                        addrs, hci, scan_timeout)
 
-        self._uuids = uuids
+        self._addrs = addrs
         self._hci = hci
         self._scan_timeout = scan_timeout
         self._conn_svc = 0
         self._get_chara = 0
         self._read_chara = 0
 
-        self._ble_scan = MmBlebc2(self._uuids, self._hci, self._scan_timeout,
+        self._ble_scan = MmBlebc2(self._addrs, self._hci, self._scan_timeout,
                                   self.cb,
                                   debug=self._dbg)
 
     def cb(self, t, h, b):
-        print('%s C, %s, %%, %s %%' % (t, h, b))
+        self._log.info('%s C, %s, %%, %s %%', t, h, b)
 
 
 @click.command(context_settings=CONTEXT_SETTINGS, help='MM-BLEBC2')
-@click.argument('uuids', type=str, nargs=-1)
+@click.argument('addrs', type=str, nargs=-1)
 @click.option('--hci', '-i', 'hci', type=int, default=0,
               help='Interface number for scan')
 @click.option('--scan_timeout', '-t', 'scan_timeout', type=int, default=3,
               help='scan sec, 0 for continuous')
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug option')
-def main(uuids, hci, scan_timeout, debug):
+def main(addrs, hci, scan_timeout, debug):
     log = get_logger(__name__, debug)
-    log.debug('uuids=%s, hci=%s, scan_timeout=%s', uuids, hci, scan_timeout)
+    log.debug('addrs=%s, hci=%s, scan_timeout=%s', addrs, hci, scan_timeout)
 
-    app = App2(uuids, hci, scan_timeout, debug=debug)
+    app = App2(addrs, hci, scan_timeout, debug=debug)
     try:
         app.main()
     finally:

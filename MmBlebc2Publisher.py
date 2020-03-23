@@ -10,17 +10,17 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 class App:
-    def __init__(self, uuids, token, channel, res_t, res_h, res_b, res_msg,
+    def __init__(self, addrs, token, channel, res_t, res_h, res_b, res_msg,
                  ave_n, debug=False):
         self._dbg = debug
         self._log = get_logger(__class__.__name__, self._dbg)
-        self._log.debug('uuids=%s, token=%s', uuids, token)
+        self._log.debug('addrs=%s, token=%s', addrs, token)
         self._log.debug('channel=%s', channel)
         self._log.debug('res_t=%s, res_h=%s, res_b=%s, res_msg=%s',
                         res_t, res_h, res_b, res_msg)
         self._log.debug('ave_n=%s', ave_n)
 
-        self._uuids = uuids
+        self._addrs = addrs
         self._token = token
         self._channel = channel
         self._res_t = res_t
@@ -43,7 +43,7 @@ class App:
         self._hist_h = []
         self._hist_b = []
 
-        self._dev = MmBlebc2(self._uuids, 0, 0, self.cb, debug=self._dbg)
+        self._dev = MmBlebc2(self._addrs, 0, 0, self.cb, debug=self._dbg)
         self._mqtt = BeebottePublisher(self._token, debug=self._dbg)
 
     def main(self):
@@ -95,7 +95,7 @@ class App:
 Environment data publisher
 temperature, humidity ..
 ''')
-@click.argument('uuid1', type=str)
+@click.argument('addr', type=str)
 @click.argument('token', type=str)
 @click.argument('channel', type=str)
 @click.argument('res_temperature', type=str)
@@ -106,15 +106,15 @@ temperature, humidity ..
               help='average N')
 @click.option('--debugg', '-d', 'debug', is_flag=True, default=False,
               help='debug option')
-def main(uuid1, token, channel,
+def main(addr, token, channel,
          res_temperature, res_humidity, res_battery, res_msg, ave_n,
          debug):
     log = get_logger(__name__, debug)
-    log.debug('uuid1=%s, token=%s, channel=%s', uuid1, token, channel)
+    log.debug('addr=%s, token=%s, channel=%s', addr, token, channel)
     log.debug('res_temperature=%s,res_humidity=%s,res_battery=%s,res_msg=%s',
               res_temperature, res_humidity, res_battery, res_msg)
 
-    app = App([uuid1], token, channel,
+    app = App([addr], token, channel,
               res_temperature, res_humidity, res_battery, res_msg,
               ave_n, debug=debug)
     try:

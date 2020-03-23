@@ -358,7 +358,6 @@ class App:
         self._log.debug('len(devs)=%d, len(dev2)=%d', len(devs), len(devs2))
 
         for d in devs2:
-            print('')
             self._ble_scan.dev_info(d, dev_data=True,
                                     conn_svc=self._conn_svc,
                                     get_chara=self._get_chara,
