@@ -14,6 +14,13 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 class BlePeripheral:
+    ADTYPE_FLAGS = 0x01
+    ADTYPE_COMPLETE_LIST_16BIT_SVC = 0x03
+    ADTYPE_COMPLETE_LIST_128BIT_SVC = 0x07
+    ADTYPE_SHORTENED_LOCAL_NAME = 0x08
+    ADTYPE_COMPLETE_LOCAL_NAME = 0x09
+    ADTYPE_MANUFACTURER_SPCIFIC_DATA = 0xff
+
     """
     BLE Peripheral
     """
@@ -59,6 +66,12 @@ class BlePeripheral:
 
     def startAdvertising(self, name, svcs, ms_data):
         """
+        Advertise ..
+        - Flags
+        - Complete Local Name (not Shortened Local Name)
+        - Services
+
+
         Parameters
         ----------
         name: str
@@ -70,19 +83,19 @@ class BlePeripheral:
         # Flags
         ad_flags = bytearray(3)
         ad_flags[0] = 2     # length
-        ad_flags[1] = 0x01  # type
+        ad_flags[1] = self.ADTYPE_FLAGS
         ad_flags[2] = 0x06  # <LE General Discoverable Mode> |
                             # <BR/EDR Not Supported>
 
         # Shortened Local Name
         ad_sl_name = bytearray(b'  ' + name.encode('utf-8'))
         ad_sl_name[0] = len(self._name) + 1
-        ad_sl_name[1] = 0x08
+        ad_sl_name[1] = self.ADTYPE_SHORTENED_LOCAL_NAME
 
         # Complete Local Name
         ad_cl_name = bytearray(b'  ' + name.encode('utf-8'))
         ad_cl_name[0] = len(self._name) + 1
-        ad_cl_name[1] = 0x09
+        ad_cl_name[1] = self.ADTYPE_COMPLETE_LOCAL_NAME
 
         # Service UUIDs
         ad_svc16 = bytearray(b'')
@@ -109,14 +122,14 @@ class BlePeripheral:
         if len(svc16) > 0:
             ad_svc16 = bytearray(b'  ' + svc16)
             ad_svc16[0] = len(svc16) + 1
-            ad_svc16[1] = 0x03
+            ad_svc16[1] = self.ADTYPE_COMPLETE_LIST_16BIT_SVC
 
             self._log.debug('ad_svc16=%s', ad_svc16)
 
         if len(svc128) > 0:
             ad_svc128 = bytearray(b'  ' + svc128)
             ad_svc128[0] = len(svc128) + 1
-            ad_svc128[1] = 0x07
+            ad_svc128[1] = self.ADTYPE_COMPLETE_LIST_128BIT_SVC
 
             self._log.debug('ad_svc128=%s', ad_svc16)
 
