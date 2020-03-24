@@ -85,7 +85,7 @@ class BlePeripheral:
         ad_flags[0] = 2     # length
         ad_flags[1] = self.ADTYPE_FLAGS
         ad_flags[2] = 0x06  # <LE General Discoverable Mode> |
-                            # <BR/EDR Not Supported>
+        #                     <BR/EDR Not Supported>
 
         # Shortened Local Name
         ad_sl_name = bytearray(b'  ' + name.encode('utf-8'))
@@ -109,11 +109,11 @@ class BlePeripheral:
                 int(uuid1[i:i+2], 16) for i in range(0, len(uuid1), 2)
             ][::-1]
             self._log.debug('uuid_rev=%s', uuid_rev)
-            
+
             if len(uuid1) == 4:  # 16-bit Service UUID
                 svc16 += bytearray(uuid_rev)
 
-            if len(uuid1) == 32: # 128-bit Service UUID
+            if len(uuid1) == 32:  # 128-bit Service UUID
                 svc128 += bytearray(uuid_rev)
 
         self._log.debug('svc16=%s', svc16)
@@ -132,7 +132,6 @@ class BlePeripheral:
             ad_svc128[1] = self.ADTYPE_COMPLETE_LIST_128BIT_SVC
 
             self._log.debug('ad_svc128=%s', ad_svc16)
-
 
         ad_svcs = ad_svc16 + ad_svc128
 
@@ -153,7 +152,7 @@ class BlePeripheral:
         advertisementData += ad_svcs + ad_ms_data
         self._log.debug('advertisementData=(%d)%s',
                         len(advertisementData), advertisementData)
-        
+
         # Scan Data (exactly same as Advertisement Data)
         scanData = ad_cl_name + ad_svcs
 

@@ -23,63 +23,61 @@ class App:
     def main(self):
         self._log.debug('')
 
-        ser = serial.Serial(self._dev_name, self._speed, timeout=1)
-        # ser.open()
+        if self.openSerial('/dev/ttyUSB', 115200, 1.0) is None:
+            self._log.error('failed to open serial')
+            return
 
         while True:
-            buf = ''
-            while True:
-                ch = ser.read()
-                self._log.debug('ch=%a', ch)
-                if len(ch) == 0:
-                    break
+            try:
+                li = self._ser.readline()
+            except serial.serialutil.SerialException:
+                li = b''
+                
+            if len(li) == 0:
+                continue
 
-                try:
-                    buf += ch.decode('utf-8')
-                except UnicodeDecodeError as e:
-                    self._log.debug('%a:%s:%s', ch, type(e), e)
-                    buf += '?'
-                    continue
+            try:
+                li = li.decode('utf-8')
+            except UnicodeDecodeError:
+                li = str(li)
 
-            print(buf)
+            li = li.replace('\r\n', '')
 
-            line = input('> ')
-            self._log.debug('line=%a', line)
-            if len(line) == 0:
-                break
+            print(li)
 
-            ser.write((line + '\r\n').encode('utf-8'))
-            time.sleep(0.1)
-
-        ser.close()
+        self.closeSerial()
 
     def end(self):
         self._log.debug('')
         self.closeSerial()
         self._log.debug('done')
 
-    def openSerial(dev_name, speed, timeout=1.0):
-        self._log.debug('dev_name=%s, spped=%d, timeout=%s',
-                        dev_name, serial, timeout)
+    def openSerial(self, dev_prefix, speed, timeout=1.0):
+        self._log.debug('dev_prefix=%s, spped=%d, timeout=%s',
+                        dev_prefix, speed, timeout)
 
         if self._ser is not None:
             self._log.warning('already opend .. close')
-            self._ser.close()
+            self.closeSerial()
 
-        try:
-            self._ser = serial.Serial(dev_name, speed, timeout=timeout)
-
-        except Exception as e:
-            self._log.error('%s, %s', type(e).__name__, e)
-            return None
+        for i in range(3):
+            dev = dev_prefix + str(i)
+            self._log.debug('dev=%s', dev)
+            try:
+                self._ser = serial.Serial(dev, speed, timeout=timeout)
+                break
+            except Exception as e:
+                self._log.error('%s, %s', type(e).__name__, e)
+                continue
 
         return self._ser
 
-    def closeSerial():
+    def closeSerial(self):
         self._log.debug('')
         if self._ser is not None:
             self._ser.close()
-        
+            self._ser = None
+
 
 @click.command(context_settings=CONTEXT_SETTINGS, help='''
 Serial test
