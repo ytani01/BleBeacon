@@ -8,6 +8,8 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 class App:
+    STR_MY_ADDR = 'MyAddrStr='
+
     _log = get_logger(__name__, False)
 
     def __init__(self, dev_name, speed, debug=False):
@@ -23,6 +25,16 @@ class App:
     def main(self):
         self._log.debug('')
 
+        while True:
+            tag_addr = self.get_tagaddr()
+            if tag_addr is not None:
+                break
+
+        self._log.info('tag_addr=%s.', tag_addr)
+
+    def get_tagaddr(self):
+        self._log.debug('')
+
         if self.openSerial('/dev/ttyUSB', 115200, 1.0) is None:
             self._log.error('failed to open serial')
             return
@@ -30,8 +42,10 @@ class App:
         while True:
             try:
                 li = self._ser.readline()
-            except serial.serialutil.SerialException:
+            except serial.serialutil.SerialException as e:
+                self._log.warning('%s:%s', type(e).__name__, e)
                 li = b''
+                return None
                 
             if len(li) == 0:
                 continue
@@ -42,8 +56,14 @@ class App:
                 li = str(li)
 
             li = li.replace('\r\n', '')
+            self._log.debug("%s", li)
 
-            print(li)
+            if li.startswith(self.STR_MY_ADDR):
+                tag_addr = li[len(self.STR_MY_ADDR):]
+                self._log.debug('* tag_addr=%s.', tag_addr)
+
+                self.closeSerial()
+                return tag_addr
 
         self.closeSerial()
 
@@ -90,10 +110,9 @@ Serial test
 @click.option('--debug', '-d', 'debug', is_flag=True, default=False,
               help='debug option')
 def main(dev_name, speed, debug):
-    lgr = get_logger(__name__, debug)
-    lgr.debug('dev_name=%s, speed=%s', dev_name, speed)
+    log = get_logger(__name__, debug)
+    log.debug('dev_name=%s, speed=%s', dev_name, speed)
 
-    lgr.info('start')
     app = App(dev_name, speed, debug=debug)
     try:
         app.main()
