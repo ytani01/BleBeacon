@@ -2,21 +2,26 @@
 
 import serial
 import time
-import click
 from MyLogger import get_logger
+import click
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 class App:
+    _log = get_logger(__name__, False)
+
     def __init__(self, dev_name, speed, debug=False):
         self._dbg = debug
-        self._lgr = get_logger(__class__.__name__, self._dbg)
-        self._lgr.debug('dev_name=%s, speed=%s', dev_name, speed)
+        self._log = get_logger(__class__.__name__, self._dbg)
+        self._log.debug('dev_name=%s, speed=%s', dev_name, speed)
 
         self._dev_name = dev_name
         self._speed = speed
 
+        self._ser = None
+
     def main(self):
-        self._lgr.debug('')
+        self._log.debug('')
 
         ser = serial.Serial(self._dev_name, self._speed, timeout=1)
         # ser.open()
@@ -25,21 +30,21 @@ class App:
             buf = ''
             while True:
                 ch = ser.read()
-                self._lgr.debug('ch=%a', ch)
+                self._log.debug('ch=%a', ch)
                 if len(ch) == 0:
                     break
 
                 try:
                     buf += ch.decode('utf-8')
                 except UnicodeDecodeError as e:
-                    self._lgr.debug('%a:%s:%s', ch, type(e), e)
+                    self._log.debug('%a:%s:%s', ch, type(e), e)
                     buf += '?'
                     continue
 
             print(buf)
 
             line = input('> ')
-            self._lgr.debug('line=%a', line)
+            self._log.debug('line=%a', line)
             if len(line) == 0:
                 break
 
@@ -49,11 +54,32 @@ class App:
         ser.close()
 
     def end(self):
-        self._lgr.debug('')
+        self._log.debug('')
+        self.closeSerial()
+        self._log.debug('done')
 
+    def openSerial(dev_name, speed, timeout=1.0):
+        self._log.debug('dev_name=%s, spped=%d, timeout=%s',
+                        dev_name, serial, timeout)
 
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+        if self._ser is not None:
+            self._log.warning('already opend .. close')
+            self._ser.close()
 
+        try:
+            self._ser = serial.Serial(dev_name, speed, timeout=timeout)
+
+        except Exception as e:
+            self._log.error('%s, %s', type(e).__name__, e)
+            return None
+
+        return self._ser
+
+    def closeSerial():
+        self._log.debug('')
+        if self._ser is not None:
+            self._ser.close()
+        
 
 @click.command(context_settings=CONTEXT_SETTINGS, help='''
 Serial test
