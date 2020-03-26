@@ -14,7 +14,7 @@ RES="temperature1 humidity1 battery1 msg1"
 
 ACTIVATE_DO="${BINDIR}/activate-do.sh"
 PUB_CMD="${BINDIR}/MmBlebc2Publisher.py"
-PUB_OPT="-a 4"
+PUB_OPT="-a 4 -o"
 
 LOGDIR="${HOME}/tmp"
 LOGFILE="${LOGDIR}/env.log"
