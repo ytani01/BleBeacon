@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
+#
+# (c) 2020 Yoichi Tanibayashi
+#
+"""
+get Tag's BLE MAC address
+"""
+__author__ = 'Yoichi Tanibayashi'
+__date__   = '2020'
 
 import serial
+import time
 from MyLogger import get_logger
 import click
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -29,9 +38,9 @@ class App:
         while True:
             tag_addr = self.get_tagaddr(self._repeat)
             if tag_addr is not None:
-                break
-
-        self._log.info('tag_addr=%s.', tag_addr)
+                self._log.info('tag_addr=%s.', tag_addr)
+                if not self._repeat:
+                    break
 
     def get_tagaddr(self, repeat):
         """
@@ -46,14 +55,21 @@ class App:
 
         tag_addr = None
 
-        dev = self.openSerial(self._dev_name_prefix, 115200, 0.1)
+        dev = None
+        while dev is None:
+            try:
+                dev = self.openSerial(self._dev_name_prefix, self._speed, 0.1)
+            except Exception as e:
+                self._log.warning('%s:%s', type(e).__name__, e)
+                time.sleep(1)
 
         while True:
             try:
                 lines = self._ser.readlines()
             except serial.serialutil.SerialException as e:
                 self._log.warning('%s:%s', type(e).__name__, e)
-                lines = []
+                # lines = []
+                return None
 
             if len(lines) == 0:
                 continue
@@ -116,12 +132,11 @@ class App:
                 self._ser = serial.Serial(dev, speed, timeout=timeout)
                 return dev
             except Exception as e:
-                self._log.warning('%s:%s', type(e).__name__, e)
+                self._log.debug('%s:%s', type(e).__name__, e)
                 dev = None
 
-        raise Exception('openSerial(%s,%d,%.1f)' % (
-            dev_prefix, speed, timeout)
-        )
+        raise Exception('openSerial(%s,%d,%.1f)' % (dev_prefix, speed,
+                                                    timeout))
 
     def closeSerial(self):
         self._log.debug('')
@@ -136,7 +151,7 @@ Serial test
 @click.option('--dev_name_prefix', '-p', 'dev_name_prefix', type=str,
               default='/dev/ttyUSB',
               help='serial device name')
-@click.option('--speed', '-s', 'speed', type=int, default=9600,
+@click.option('--speed', '-s', 'speed', type=int, default=115200,
               help='serial speed')
 @click.option('--repeat', '-r', 'repeat', is_flag=True, default=False,
               help='repeat flag')
