@@ -2,16 +2,19 @@
 #
 # (c) 2020 Yoichi Tanibayashi
 #
+from OledText import OledText
 from MmBlebc2 import MmBlebc2
 from Mqtt import BeebottePublisher
 from MyLogger import get_logger
+from ipaddr import ipaddr
+import time
 import click
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 class App:
     def __init__(self, addrs, token, channel, res_t, res_h, res_b, res_msg,
-                 ave_n, debug=False):
+                 ave_n, oled, debug=False):
         self._dbg = debug
         self._log = get_logger(__class__.__name__, self._dbg)
         self._log.debug('addrs=%s, token=%s', addrs, token)
@@ -19,6 +22,7 @@ class App:
         self._log.debug('res_t=%s, res_h=%s, res_b=%s, res_msg=%s',
                         res_t, res_h, res_b, res_msg)
         self._log.debug('ave_n=%s', ave_n)
+        self._log.debug('oled=%s', oled)
 
         self._addrs = addrs
         self._token = token
@@ -28,6 +32,10 @@ class App:
         self._res_b = res_b
         self._res_msg = res_msg
         self._ave_n = ave_n
+        self._oled = oled
+
+        self._ip = ipaddr().ip_addr()
+        self._log.debug('ip=%s', self._ip)
 
         self._topic_t = '%s/%s' % (self._channel, self._res_t)
         self._topic_h = '%s/%s' % (self._channel, self._res_h)
@@ -45,6 +53,11 @@ class App:
 
         self._dev = MmBlebc2(self._addrs, 0, 0, self.cb, debug=self._dbg)
         self._mqtt = BeebottePublisher(self._token, debug=self._dbg)
+
+        if self._oled:
+            self._ot = OledText('ssd1306', 1, 2, debug=self._dbg)
+            self._ot.set_part('header', crlf=False)
+            self._ot.print(self._ip)
 
     def main(self):
         self._log.debug('')
@@ -90,6 +103,15 @@ class App:
         self._mqtt.send_data(str(b), self._topic_b)
         self._mqtt.send_data(msg, self._topic_msg)
 
+        if self._oled:
+            self._ot.set_part('body')
+            self._ot.print('%.2f ℃   %.2f %%' % (t, h))
+
+            self._ot.set_part('footer')
+            self._ot.set_row(0, 'footer')
+            self._ot.print(time.strftime('%Y/%m/%d(%a)'))
+            self._ot.print(time.strftime('%H:%M:%S'))
+
 
 @click.command(context_settings=CONTEXT_SETTINGS, help='''
 Environment data publisher
@@ -104,23 +126,27 @@ temperature, humidity ..
 @click.argument('res_msg', type=str)
 @click.option('--ave_n', '-a', 'ave_n', type=int, default=1,
               help='average N')
+@click.option('--oled', '-o', 'oled', is_flag=True, default=False,
+              help='OLED flag')
 @click.option('--debugg', '-d', 'debug', is_flag=True, default=False,
               help='debug option')
 def main(addr, token, channel,
-         res_temperature, res_humidity, res_battery, res_msg, ave_n,
+         res_temperature, res_humidity, res_battery, res_msg, ave_n, oled,
          debug):
     log = get_logger(__name__, debug)
     log.debug('addr=%s, token=%s, channel=%s', addr, token, channel)
     log.debug('res_temperature=%s,res_humidity=%s,res_battery=%s,res_msg=%s',
               res_temperature, res_humidity, res_battery, res_msg)
+    log.debug('oled=%s', oled)
 
     app = App([addr], token, channel,
               res_temperature, res_humidity, res_battery, res_msg,
-              ave_n, debug=debug)
+              ave_n, oled, debug=debug)
     try:
         app.main()
     finally:
         app.end()
+
 
 if __name__ == '__main__':
     main()

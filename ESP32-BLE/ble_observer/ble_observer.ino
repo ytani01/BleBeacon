@@ -24,8 +24,8 @@
 int     LedMode = LED_MODE_OFF;
 #define ON_MSEC        2000
 
-#define COUNTOFF_MAX 2
-int     CountOff = 0;
+#define SCAN_COUNT_MAX 2
+int     Scan_Count = 0;
 
 BLEScan* pBLEScan;
 String   MyAddrStr;
@@ -43,9 +43,15 @@ String TargetName;
 void setup() {
   Serial.begin(SERIAL_SPEED);
 
+  //
+  // initialize LED
+  //
   pinMode(PIN_LED, OUTPUT);
   digitalWrite(PIN_LED, LOW);
 
+  //
+  // initialize File system
+  //
   Serial.println("----- File system");
   if (!SPIFFS.begin(FORMAT_ON_FAIL)) {
     Serial.println("SPIFFS.begin(): failed");
@@ -54,6 +60,9 @@ void setup() {
   File rootfs = SPIFFS.open("/");
   Serial.println("/");
 
+  //
+  // find ON_FILE
+  //
   File file;
   while ( file = rootfs.openNextFile() ) {
     String name = file.name();
@@ -75,18 +84,21 @@ void setup() {
 
   Serial.println("-----");
 
-  CountOff = 0;
+  Scan_Count = 0;
 
+  //
+  // initialize BLE
+  //
   BLEDevice::init(MY_NAME);
   MyAddrStr = String(BLEDevice::getAddress().toString().c_str());
   Serial.println("MyAddrStr=" + MyAddrStr);
   
+  // start scan
   pBLEScan = BLEDevice::getScan();
   pBLEScan->setActiveScan(false); // パッシブスキャン
   //pBLEScan->setActiveScan(true); // アクティブスキャン
 
   Serial.println("start...");
-  // digitalWrite(PIN_LED, LOW);
 
   TargetName = TAG_PREFIX + MyAddrStr;
   Serial.println("TargetName=" + TargetName);
@@ -96,10 +108,12 @@ void setup() {
 // loop
 //
 void loop() {
+  Serial.println("MyAddrStr=" + MyAddrStr);
+
   Serial.print("scanning ..");
   BLEScanResults foundDevices = pBLEScan->start(SCAN_SEC);
   int n_devs = foundDevices.getCount();
-  Serial.println(" done. " + String(n_devs));
+  Serial.println(" done. " + String(n_devs) + "devices");
   
   LedMode = LED_MODE_OFF;
   for (int i = 0; i < n_devs; i++) {
@@ -113,22 +127,10 @@ void loop() {
     }
 
     if (dev_name == PUB_NAME && ms_data == TargetName) {
-      Serial.println("*" + dev_name + "[" + dev_addr + "] " + ms_data + " !!");
+      Serial.println("*" + dev_name + "[" + dev_addr + "] " + ms_data);
       LedMode = LED_MODE_ON;
       break;
     }
-
-    /*
-    if (dev.haveServiceData()) {
-      String svc_data = String(dev.getServiceData().c_str());
-      Serial.println("  svc_data=" + svc_data);
-    }
-
-    if (dev.haveServiceUUID()) {
-      BLEUUID svc_uuid = dev.getServiceDataUUID();
-      Serial.println("  svc_uuid=" + String(svc_uuid.toString().c_str()));
-    }
-    */
   } // for
   
   Serial.println("LedMode=" + String(LedMode));
@@ -139,26 +141,16 @@ void loop() {
     File f = SPIFFS.open(ON_FILE, "w");
     f.close();
 
-    CountOff = 0;
-
-    /*
-    delay(ON_MSEC);
-    Serial.println("deep sleep " + String(DEEP_SLEEP_MSEC_ON) + " msec ..");
-    Serial.println();
-    esp_deep_sleep(DEEP_SLEEP_MSEC_ON * 1000LL);
-    */
-    // digitalWrite(PIN_LED, LOW);
-    //LedMode = LED_MODE_OFF;
-
+    Scan_Count = 0;
   } else {				// LED_MODE_OFF
     digitalWrite(PIN_LED, LOW);
 
     SPIFFS.remove(ON_FILE);
 
-    CountOff++;
-    Serial.println("CountOff=" + String(CountOff));
-    if (CountOff > COUNTOFF_MAX) {
-      Serial.println("deep sleep " + String(DEEP_SLEEP_MSEC_OFF) + " msec ..");
+    Scan_Count++;
+    Serial.println("Scan_Count=" + String(Scan_Count));
+    if (Scan_Count > SCAN_COUNT_MAX) {
+      Serial.println("deep sleep " + String(DEEP_SLEEP_MSEC_OFF) + " msec");
       esp_deep_sleep(DEEP_SLEEP_MSEC_OFF * 1000LL);
     }
   }
