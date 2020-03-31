@@ -16,6 +16,10 @@ quit
 (env-ble)$ sudo systemctl restart bluetooth.service
 ```
 
+for pybleno
+```bash
+$ sudo setcap 'cap_net_raw,cap_net_admin+eip' $(readlink -f $(which python3))
+```
 
 ## 全体的な罠
 
