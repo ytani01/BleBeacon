@@ -187,6 +187,14 @@ class BlePeripheral:
             self._log.debug('setService:%s', [s.uuid for s in self._svcs])
             self._bleno.setServices(self._svcs)
 
+    @classmethod
+    def notify(cls, chara):
+        cls._log.debug('_uuid=%s', chara._uuid)
+
+        if chara._updateValueCallback:
+            cls._log.debug('Notify ! (_value=%a)', chara._value)
+            chara._updateValueCallback(chara._value)
+
     """
     def onServicesSet(self, error):
         self._log.debug('error=%s', error)
@@ -286,16 +294,22 @@ class BlePeripheralApp:
         self._ble = BlePeripheral(self._name, [], self._ms_data,
                                   debug=self._dbg)
 
+        self._active = False
+
     def main(self):
         self._log.debug('')
 
         self._ble.start()
 
-        while True:
+        self._active = True
+        while self._active:
             time.sleep(10)
 
+        self._log.debug('done')
+            
     def end(self):
         self._log.debug('')
+        self._active = False
         self._ble.end()
         self._log.debug('done')
 
