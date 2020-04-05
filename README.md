@@ -6,6 +6,10 @@
 $ cd
 $ python3 -m venv env-ble
 $ . ./env-ble/bin/activate
+```
+
+for bluepy
+```bash
 (env-ble)$ pip install -U bluepy
 (env-ble)$ sudo setcap 'cap_net_raw,cap_net_admin+eip' lib/python3.7/site-packages/bluepy/bluepy-helper
 (env-ble)$ ~/env-ble/lib/python3.7/site-packages/bluepy/bluepy-helper 0
@@ -14,6 +18,12 @@ le on
 rsp=$mgmt code=$success
 quit
 (env-ble)$ sudo systemctl restart bluetooth.service
+```
+
+for pybleno
+```bash
+(env-ble)$ pip install -U pybleno
+(env-ble)$ sudo setcap 'cap_net_raw,cap_net_admin+eip' $(readlink -f $(which python3))
 ```
 
 
